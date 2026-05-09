@@ -22,10 +22,10 @@ const CONFIG = {
   
   /* URL del Google Apps Script desplegado como Web App.
      Reemplazá este valor con tu URL real. */
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/TU_URL_AQUI/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyKyUJ4WTUVaIs_O8gx8EtO8pn25MqcdH8omrFzfoxSMZakBOWcoDEbJiAL3FAtUL31Aw/exec',
 
   /* Nombre del sitio (aparece en algunos mensajes) */
-  NOMBRE_SITIO: 'Silent Hunters League',
+  NOMBRE_SITIO: 'Versenktafel',
 
   /* Tiempo (en milisegundos) que dura la sesión del usuario.
      86400000 ms = 24 horas.
