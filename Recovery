@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<!--
+  recovery.html — Página de recuperación de contraseña
+  
+  El usuario ingresa su email, y el sistema le manda un link
+  para crear una nueva contraseña. El link lleva a reset.html
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Silent Hunters League — Recuperar Acceso</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚢</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="logo-badge" role="img" aria-label="Logo">⚓</div>
+    <h1 class="site-title">Silent Hunters</h1>
+    <p class="site-subtitle">Kriegsmarine Operations League</p>
+  </header>
+
+  <main>
+    <div class="panel">
+      
+      <h2 class="panel-titulo">Recuperar Acceso</h2>
+      <hr class="panel-separador">
+      
+      <!-- Texto explicativo -->
+      <p style="font-size:0.82rem; color:var(--color-texto); margin-bottom:1.2rem; line-height:1.6;">
+        Ingresá tu dirección de e-mail. Si está registrada, recibirás un mensaje
+        con instrucciones para establecer un nuevo código de acceso.
+      </p>
+      
+      <!-- Alerta de mensajes -->
+      <div id="alerta" class="alerta" role="alert" aria-live="polite"></div>
+      
+      <!-- Formulario de recuperación -->
+      <form id="form-recovery" onsubmit="return false" novalidate>
+        
+        <div class="form-grupo">
+          <label for="email">📡 Dirección de Transmisión (E-mail)</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="comandante@flota.com"
+            autocomplete="email"
+            required
+          >
+          <span id="email-error" class="campo-error" role="alert"></span>
+        </div>
+        
+        <button type="submit" class="btn-primario" id="btn-recovery">
+          ▶ Enviar Instrucciones
+        </button>
+        
+      </form>
+      
+      <nav class="nav-links">
+        <a href="index.html">← Volver al Acceso</a>
+      </nav>
+      
+      <div class="profundidad" aria-hidden="true">COMUNICACIONES: CIFRADAS — PROTOCOLO: ENIGMA</div>
+      
+    </div>
+  </main>
+  
+  <footer class="site-footer">
+    SILENT HUNTERS LEAGUE · EST. 2024 · OPERACIONES SUBSUPERFICIALES
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      
+      const form      = document.getElementById('form-recovery');
+      const btnEnviar = document.getElementById('btn-recovery');
+      const inputEmail = document.getElementById('email');
+      
+      form.addEventListener('submit', async function() {
+        
+        // Limpiar estado anterior
+        ocultarAlerta('alerta');
+        inputEmail.classList.remove('invalido');
+        document.getElementById('email-error').style.display = 'none';
+        
+        const email = inputEmail.value.trim();
+        
+        // Validación
+        if (!email) {
+          inputEmail.classList.add('invalido');
+          const err = document.getElementById('email-error');
+          err.textContent = 'Ingresá tu dirección de e-mail.';
+          err.style.display = 'block';
+          return;
+        }
+        
+        if (!validarEmail(email)) {
+          inputEmail.classList.add('invalido');
+          const err = document.getElementById('email-error');
+          err.textContent = 'El formato del e-mail no es válido.';
+          err.style.display = 'block';
+          return;
+        }
+        
+        // Deshabilitar botón
+        btnEnviar.disabled = true;
+        btnEnviar.textContent = '▶ Enviando';
+        
+        // ── Pedido al servidor ──────────────────────────────
+        // Le enviamos el email. El servidor:
+        // 1. Verifica si el email existe en la planilla
+        // 2. Genera un token temporal (código único y aleatorio)
+        // 3. Guarda el token en la planilla con fecha de expiración
+        // 4. Envía un email con el link de reset (que incluye el token)
+        const resultado = await pedirAlServidor('recuperarClave', { email });
+        
+        // ── Procesar respuesta ──────────────────────────────
+        // IMPORTANTE: Por seguridad, siempre mostramos el mismo
+        // mensaje sin importar si el email existe o no. Esto evita
+        // que alguien use esta página para averiguar qué emails
+        // están registrados en el sistema.
+        
+        if (resultado.exito || resultado.emailNoExiste) {
+          mostrarAlerta(
+            'alerta',
+            '📨 Si esa dirección está registrada, recibirás las instrucciones en breve. Revisá también tu carpeta de SPAM.',
+            'info'
+          );
+          // Ocultamos el formulario para que no lo manden dos veces
+          form.style.display = 'none';
+          
+        } else {
+          mostrarAlerta('alerta', resultado.mensaje || 'Error al procesar el pedido.', 'error');
+          btnEnviar.disabled = false;
+          btnEnviar.textContent = '▶ Enviar Instrucciones';
+        }
+        
+      });
+      
+      // Limpiar error al escribir
+      inputEmail.addEventListener('input', function() {
+        this.classList.remove('invalido');
+        document.getElementById('email-error').style.display = 'none';
+      });
+      
+    });
+  </script>
+
+</body>
+</html>
