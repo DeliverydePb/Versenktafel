@@ -20,7 +20,6 @@
         .oculto { display: none; }
         .alerta { color: #ff3333; font-weight: bold; margin: 10px 0; border-left: 4px solid #ff3333; padding-left: 10px; }
         select { background: #1a1d20; color: #00ff00; border: 1px solid #00ff00; padding: 5px; font-family: inherit; }
-        .cargando { color: #ffc107; font-style: italic; }
     </style>
 </head>
 <body>
@@ -84,17 +83,52 @@
                 const data = await r.json();
                 document.querySelector("#tabla-ranking tbody").innerHTML = data.ranking.map(u => `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`).join('') || "<tr><td colspan='2'>Sin registros.</td></tr>";
                 misionesActivas = data.misiones;
+                
+                // Si el usuario ya está logueado, actualizamos su nombre desde la base de datos
+                if (usuarioActual) {
+                    const datosUsuario = data.ranking.find(u => u.e === usuarioActual.email);
+                    if (datosUsuario) {
+                        usuarioActual.nombreComandante = datosUsuario.n;
+                        document.getElementById('user-info').innerText = "Comandante: " + usuarioActual.nombreComandante;
+                    }
+                }
+                
                 actualizarInterfazMisiones();
             } catch (e) { console.error(e); }
         }
 
-        function onSignIn(response) {
+        async function onSignIn(response) {
             const payload = JSON.parse(atob(response.credential.split('.')[1]));
             usuarioActual = payload;
-            document.getElementById('user-info').innerText = "Comandante: " + payload.name;
+            
+            // 1. Verificamos si ya existe en el ranking
+            const r = await fetch(CONFIG.URL_API);
+            const data = await r.json();
+            const usuarioRegistrado = data.ranking.find(u => u.e === payload.email);
+
+            let nombreComandante;
+            if (!usuarioRegistrado) {
+                nombreComandante = prompt("BIENVENIDO AL BdU. Ingrese su nombre de COMANDANTE para el registro oficial:");
+                if (!nombreComandante) nombreComandante = payload.name; // Fallback
+            } else {
+                nombreComandante = usuarioRegistrado.n;
+            }
+
+            usuarioActual.nombreComandante = nombreComandante;
+            document.getElementById('user-info').innerText = "Comandante: " + nombreComandante;
             document.getElementById('misiones-area').classList.remove('oculto');
             document.getElementById('login-area').style.display = "none";
-            fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({action:"login", email:payload.email, nombre:payload.name}) });
+            
+            // 2. Registrar/Login en Sheets
+            await fetch(CONFIG.URL_API, { 
+                method: 'POST', 
+                body: JSON.stringify({
+                    action:"login", 
+                    email:payload.email, 
+                    nombre:nombreComandante
+                }) 
+            });
+            
             refrescarDatos();
         }
 
@@ -130,37 +164,28 @@
         async function crearMision() {
             const btn = document.getElementById('btn-crear');
             const sub = document.getElementById('sub-creador').value;
-            
-            // Feedback visual inmediato
             btn.disabled = true;
-            btn.innerText = "Transmitiendo a Enigma...";
+            btn.innerText = "Transmitiendo...";
 
             try {
-                const res = await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({
+                await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({
                     action: "crearMision", 
                     email: usuarioActual.email, 
-                    nombreCreador: usuarioActual.name,
+                    nombreCreador: usuarioActual.nombreComandante,
                     submarino: sub
                 })});
-                
-                if(res.ok) {
-                    descargarArchivoMision(sub);
-                    await refrescarDatos();
-                }
+                descargarArchivoMision(sub);
+                await refrescarDatos();
             } catch (e) {
-                alert("Error de conexión con el BdU");
+                alert("Error");
                 btn.disabled = false;
-                btn.innerText = "🚀 Iniciar Nueva Patrulla";
             }
         }
 
         async function unirse(id) {
             const btn = document.getElementById(`btn-unirse-${id}`);
             const sub = document.getElementById(`sub-unirse-${id}`).value;
-            
             btn.disabled = true;
-            btn.innerText = "Uniéndose...";
-
             try {
                 await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({
                     action: "unirseMision", 
@@ -170,19 +195,14 @@
                 })});
                 await refrescarDatos();
             } catch (e) {
-                alert("Error al unirse");
                 btn.disabled = false;
-                btn.innerText = "⚓ UNIRSE";
             }
         }
 
         async function cancelarMision() {
-            if(!confirm("¿Seguro que deseas cancelar la patrulla?")) return;
-            
+            if(!confirm("¿Cancelar patrulla?")) return;
             const btn = document.getElementById('btn-cancelar');
             btn.disabled = true;
-            btn.innerText = "Cancelando...";
-
             try {
                 await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({
                     action: "cancelarMision", 
@@ -190,13 +210,12 @@
                 })});
                 await refrescarDatos();
             } catch (e) {
-                alert("Error al cancelar");
                 btn.disabled = false;
             }
         }
 
         function descargarArchivoMision(submarino) {
-            const texto = `ORDEN DE OPERACIONES - BdU\n--------------------------\nComandante: ${usuarioActual.name}\nSubmarino: ${submarino}\nFecha: ${new Date().toLocaleString()}\n\nBuena caza, Herr Kaleun.`;
+            const texto = `ORDEN DE OPERACIONES - BdU\n--------------------------\nComandante: ${usuarioActual.nombreComandante}\nSubmarino: ${submarino}\nFecha: ${new Date().toLocaleString()}\n\nBuena caza.`;
             const blob = new Blob([texto], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
