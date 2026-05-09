@@ -8,7 +8,7 @@
         body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; }
         .panel { border: 1px solid #444; padding: 15px; background: #1a1d20; margin-bottom: 20px; box-shadow: inset 0 0 10px #000; }
         h1, h2 { color: #00ff00; border-bottom: 1px solid #00ff00; text-shadow: 0 0 5px #00ff00; }
-        input { background: #000; color: #00ff00; border: 1px solid #444; padding: 8px; margin: 5px 0; width: 250px; display: block; }
+        input, select { background: #000; color: #00ff00; border: 1px solid #444; padding: 8px; margin: 5px 0; width: 250px; display: block; }
         .btn { background: #1a1d20; color: #00ff00; border: 1px solid #00ff00; padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
         .btn:hover { background: #00ff00; color: #000; }
         .oculto { display: none; }
@@ -17,15 +17,15 @@
         th, td { border: 1px solid #444; padding: 12px; text-align: left; }
         .link { color: #00ff00; text-decoration: underline; cursor: pointer; font-size: 0.8em; }
         
-        /* Estilo específico para el ranking global */
         #global-ranking { border-top: 2px solid #00ff00; margin-top: 50px; }
+        .mision-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #444; padding: 10px 0; }
     </style>
 </head>
 <body>
 
     <h1>⚓ BdU - VERSENKTAFEL ⚓</h1>
 
-    <!-- 1. AREA DE AUTENTICACIÓN (LOGIN/REGISTRO) -->
+    <!-- 1. AREA DE AUTENTICACIÓN -->
     <div id="auth-area" class="panel">
         <div id="login-form">
             <h2>ACCESO COMANDANTE</h2>
@@ -45,17 +45,32 @@
         </div>
     </div>
 
-    <!-- 2. AREA PRIVADA (SOLO TRAS LOGIN) -->
+    <!-- 2. AREA PRIVADA -->
     <div id="main-area" class="oculto">
         <div class="panel">
             <h2 id="bienvenida"></h2>
+            
+            <h3>Patrullas en Curso</h3>
             <div id="lista-misiones" style="margin-bottom: 15px;"></div>
+            
+            <hr>
+            
+            <h3>Nueva Patrulla</h3>
+            <label for="tipo-sub">Seleccione su Sumergible:</label>
+            <select id="tipo-sub">
+                <option value="Tipo IIA">Tipo IIA (Bebé Lorient)</option>
+                <option value="Tipo VIIB">Tipo VIIB (Priet)</option>
+                <option value="Tipo VIIC">Tipo VIIC (El Caballo de Batalla)</option>
+                <option value="Tipo IXB">Tipo IXB (Largo Alcance)</option>
+                <option value="Tipo IXC">Tipo IXC</option>
+                <option value="Tipo XXI">Tipo XXI (Electroboote)</option>
+            </select>
             <button class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
             <button class="btn" style="border-color:red; color:red; margin-left: 10px;" onclick="location.reload()">Cerrar Sesión</button>
         </div>
     </div>
 
-    <!-- 3. RANKING SIEMPRE VISIBLE (ABAJO) -->
+    <!-- 3. RANKING SIEMPRE VISIBLE -->
     <div id="global-ranking" class="panel">
         <h2>📊 REGISTRO GLOBAL DE TONELAJE (RANKING)</h2>
         <table id="tabla-ranking">
@@ -79,7 +94,6 @@
             document.getElementById('registro-form').classList.toggle('oculto', showLogin);
         }
 
-        // Función base para hablar con el servidor
         async function api(params) {
             try {
                 const resp = await fetch(CONFIG.URL_API, {
@@ -128,7 +142,6 @@
         }
 
         async function refrescar() {
-            // Obtenemos datos sin acción específica para traer ranking y misiones
             const data = await api({action: "get"});
             
             if (data.ranking) {
@@ -139,20 +152,47 @@
 
             if (data.misiones) {
                 document.getElementById('lista-misiones').innerHTML = data.misiones.map(m => 
-                    `<div class="panel" style="border-color: #333;">Misión activa de: <strong>${m.n}</strong></div>`
+                    `<div class="mision-card">
+                        <span>Patrulla de: <strong>${m.n}</strong></span>
+                        <button class="btn" style="padding: 5px 10px; font-size: 0.7em;" onclick="unirseMision('${m.id}')">Unirse</button>
+                    </div>`
                 ).join('') || "<p>No hay patrullas en curso actualmente.</p>";
             }
         }
 
         async function crearMision() {
-            const res = await api({action: "crearMision", email: usuario.email, nombre: usuario.nombre});
+            const sub = document.getElementById('tipo-sub').value;
+            const res = await api({
+                action: "crearMision", 
+                email: usuario.email, 
+                nombre: usuario.nombre,
+                submarino: sub
+            });
             if(res.status === "ok") {
-                alert("Patrulla iniciada. ¡Buena caza!");
+                alert("Patrulla iniciada con el " + sub + ". ¡Buena caza!");
                 refrescar();
             }
         }
 
-        // Al cargar la página, llenamos el ranking público inmediatamente
+        async function unirseMision(misionId) {
+            const sub = prompt("¿Qué submarino utilizará para unirse a la manada de lobos?");
+            if(!sub) return;
+            
+            const res = await api({
+                action: "unirseMision",
+                idMision: misionId,
+                email: usuario.email,
+                submarino: sub
+            });
+            
+            if(res.status === "ok") {
+                alert("Se ha unido a la patrulla con éxito.");
+                refrescar();
+            } else {
+                alert(res.msg || "Error al unirse.");
+            }
+        }
+
         window.onload = () => {
             refrescar();
         };
