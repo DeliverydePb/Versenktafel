@@ -18,20 +18,20 @@
         .link { color: #00ff00; text-decoration: underline; cursor: pointer; font-size: 0.8em; }
         
         #user-header { position: absolute; top: 10px; right: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,255,0,0.1); padding: 5px 15px; border: 1px solid #00ff0044; }
-        #user-header strong { color: #00ff00; }
         
-        #global-ranking { border-top: 2px solid #00ff00; margin-top: 50px; }
         .mision-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #444; padding: 10px 0; gap: 10px; }
         .mision-controls { display: flex; align-items: center; gap: 5px; }
         .mision-controls select { width: 160px; margin: 0; padding: 4px; font-size: 0.8em; }
-        .alerta-mision { color: #ff9900; font-weight: bold; border: 1px solid #ff9900; padding: 15px; margin-top: 10px; }
+        
+        .alerta-mision { color: #ff9900; font-weight: bold; border: 1px solid #ff9900; padding: 15px; margin-top: 10px; text-align: center; }
+        .btn-danger { border-color: #ff4444; color: #ff4444; margin-top: 10px; }
+        .btn-danger:hover { background: #ff4444; color: #000; }
     </style>
 </head>
 <body>
 
-    <!-- CABECERA DE SESIÓN -->
     <div id="user-header" class="oculto">
-        <span>KALEUN: <strong id="header-nombre"></strong></span>
+        <span>KALEUN: <strong id="header-nombre" style="color: #00ff00;"></strong></span>
         <button class="btn" style="border-color:red; color:red; padding: 5px 10px; font-size: 0.8em;" onclick="location.reload()">Cerrar Sesión</button>
     </div>
 
@@ -44,12 +44,12 @@
             <input type="email" id="l-email" placeholder="Correo Electrónico">
             <input type="password" id="l-pass" placeholder="Clave de Acceso">
             <button class="btn" onclick="login()">Entrar</button>
-            <p>¿No registrado? <span class="link" onclick="toggleAuth(false)">Crear Cuenta</span> | <span class="link" onclick="recuperar()">Olvidé mi clave</span></p>
+            <p>¿No registrado? <span class="link" onclick="toggleAuth(false)">Crear Cuenta</span></p>
         </div>
 
         <div id="registro-form" class="oculto">
             <h2>NUEVO RECLUTA</h2>
-            <input type="text" id="r-nombre" placeholder="Nombre de Comandante (ej: U-96)">
+            <input type="text" id="r-nombre" placeholder="Nombre de Comandante">
             <input type="email" id="r-email" placeholder="Correo Electrónico">
             <input type="password" id="r-pass" placeholder="Clave de Acceso">
             <button class="btn" onclick="registrar()">Registrarse</button>
@@ -83,24 +83,24 @@
             <div id="mensaje-bloqueo-patrulla" class="oculto">
                 <div class="alerta-mision">
                     <p>⚠️ TIENE UNA PATRULLA EN CURSO.</p>
-                    <button class="btn" style="border-color:#00ff00; margin-top:10px;" onclick="entregarResultados()">📥 Entregar Resultados</button>
+                    <div style="display: flex; justify-content: center; gap: 20px;">
+                        <button class="btn" onclick="entregarResultados()">📥 Entregar Resultados</button>
+                        <button class="btn btn-danger" onclick="cancelarMision()">❌ Cancelar Patrulla</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 3. RANKING SIEMPRE VISIBLE -->
+    <!-- 3. RANKING -->
     <div id="global-ranking" class="panel">
-        <h2>📊 REGISTRO GLOBAL DE TONELAJE (RANKING)</h2>
+        <h2>📊 REGISTRO GLOBAL DE TONELAJE</h2>
         <table id="tabla-ranking">
             <thead>
-                <tr>
-                    <th>CAPITÁN</th>
-                    <th>TONELAJE TOTAL</th>
-                </tr>
+                <tr><th>CAPITÁN</th><th>TONELAJE</th></tr>
             </thead>
             <tbody>
-                <tr><td colspan="2">Cargando datos del Almirantazgo...</td></tr>
+                <tr><td colspan="2">Cargando datos...</td></tr>
             </tbody>
         </table>
     </div>
@@ -121,20 +121,8 @@
                 });
                 return await resp.json();
             } catch (e) {
-                console.error("Error de conexión:", e);
-                return { status: "error", msg: "No se pudo conectar con el servidor." };
+                return { status: "error", msg: "Error de red o CORS." };
             }
-        }
-
-        async function registrar() {
-            const nombre = document.getElementById('r-nombre').value;
-            const email = document.getElementById('r-email').value;
-            const pass = document.getElementById('r-pass').value;
-            if(!nombre || !email || !pass) return alert("Complete todos los campos");
-
-            const res = await api({action: "registro", nombre, email, pass});
-            alert(res.msg);
-            if(res.status === "ok") toggleAuth(true);
         }
 
         async function login() {
@@ -154,20 +142,13 @@
             }
         }
 
-        async function recuperar() {
-            const email = prompt("Ingrese su correo para recibir la clave:");
-            if(!email) return;
-            const res = await api({action: "recuperar", email});
-            alert(res.msg);
-        }
-
         async function refrescar() {
             const data = await api({action: "get"});
             
             if (data.ranking) {
                 document.querySelector("#tabla-ranking tbody").innerHTML = data.ranking.map(u => 
                     `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`
-                ).join('') || "<tr><td colspan='2'>Sin registros aún.</td></tr>";
+                ).join('') || "<tr><td colspan='2'>Sin registros.</td></tr>";
             }
 
             if (data.misiones) {
@@ -195,53 +176,59 @@
                             </div>
                         ` : ''}
                     </div>`;
-                }).join('') || "<p>No hay patrullas en curso actualmente.</p>";
+                }).join('') || "<p>No hay patrullas en curso.</p>";
             }
         }
 
         async function crearMision() {
             const sub = document.getElementById('tipo-sub').value;
-            if(!sub) return alert("Debe seleccionar un submarino para iniciar la patrulla.");
-
-            const res = await api({
-                action: "crearMision", 
-                email: usuario.email, 
-                nombre: usuario.nombre,
-                submarino: sub
-            });
-            if(res.status === "ok") {
-                alert("Patrulla iniciada. ¡Buena caza!");
-                refrescar();
-            }
+            if(!sub) return alert("Seleccione un submarino.");
+            const res = await api({action: "crearMision", email: usuario.email, nombre: usuario.nombre, submarino: sub});
+            if(res.status === "ok") { refrescar(); } else { alert(res.msg); }
         }
 
         async function unirseMision(misionId) {
             const sub = document.getElementById(`sub-join-${misionId}`).value;
-            if(!sub) return alert("Seleccione un submarino para unirse a la manada.");
+            if(!sub) return alert("Seleccione un submarino.");
             
             const res = await api({
                 action: "unirseMision",
                 idMision: misionId,
                 email: usuario.email,
+                nombre: usuario.nombre, // Añadido para asegurar identificación
                 submarino: sub
             });
             
             if(res.status === "ok") {
-                alert("Confirmado. Se ha unido a la patrulla.");
+                alert("Unido a la manada.");
                 refrescar();
             } else {
-                alert(res.msg || "Error al unirse.");
+                alert("Error: " + (res.msg || "El servidor rechazó la solicitud."));
+            }
+        }
+
+        async function cancelarMision() {
+            if(!confirm("¿Está seguro de que desea abortar la patrulla? No se guardarán los hundimientos.")) return;
+            
+            const res = await api({
+                action: "cancelarMision",
+                email: usuario.email,
+                nombre: usuario.nombre
+            });
+
+            if(res.status === "ok") {
+                alert("Patrulla cancelada. Regresando a la base.");
+                refrescar();
+            } else {
+                alert(res.msg);
             }
         }
 
         async function entregarResultados() {
-            // Por ahora solo una alerta, luego programaremos la lógica de envío de datos
-            alert("Lógica de entrega en preparación. El BdU espera su informe de hundimientos.");
+            alert("Preparando cuaderno de bitácora para el envío...");
         }
 
-        window.onload = () => {
-            refrescar();
-        };
+        window.onload = () => { refrescar(); };
     </script>
 </body>
 </html>
