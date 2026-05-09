@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Wolfpack Lobby - Submarinos</title>
+    <!-- Cargamos Google para el Login y Tesseract para la imagen -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; background: #1a1a1a; color: #00ff00; padding: 20px; }
+        .seccion { border: 1px solid #00ff00; padding: 20px; margin-bottom: 20px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #00ff00; padding: 8px; text-align: left; }
+        button { background: #00ff00; color: black; border: none; padding: 10px; cursor: pointer; font-weight: bold; }
+        .oculto { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>⚓ SISTEMA DE COMANDO DE SUBMARINOS ⚓</h1>
+
+    <!-- 1. REGISTRO / LOGIN -->
+    <div id="seccion-login" class="seccion">
+        <h2>IDENTIFICACIÓN</h2>
+        <div id="g_id_onload"
+             data-client_id="TU_CLIENT_ID_DE_GOOGLE.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse">
+        </div>
+        <div class="g_id_signin" data-type="standard"></div>
+    </div>
+
+    <!-- 2. SALÓN DE LA FAMA (Siempre visible) -->
+    <div id="seccion-ranking" class="seccion">
+        <h2>SALÓN DE LA FAMA</h2>
+        <table id="tabla-ranking">
+            <thead><tr><th>Capitán</th><th>Puntos de Prestigio</th></tr></thead>
+            <tbody><!-- Se llena con el script --></tbody>
+        </table>
+    </div>
+
+    <!-- 3. SUBIR RESULTADOS (Solo tras login) -->
+    <div id="seccion-partida" class="seccion oculto">
+        <h2>REGISTRAR RESULTADOS DE MISIÓN</h2>
+        <p>Sube la captura de pantalla de la partida:</p>
+        <input type="file" id="foto-resultado" accept="image/*">
+        <button onclick="procesarImagen()">Analizar y Enviar</button>
+        <p id="estado-ocr"></p>
+    </div>
+
+    <script>
+        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbyKyUJ4WTUVaIs_O8gx8EtO8pn25MqcdH8omrFzfoxSMZakBOWcoDEbJiAL3FAtUL31Aw/exec";
+
+        // Función para cargar el Ranking al abrir la página
+        async function cargarRanking() {
+            const res = await fetch(URL_APPS_SCRIPT);
+            const datos = await res.json();
+            const tabla = document.querySelector("#tabla-ranking tbody");
+            tabla.innerHTML = datos.map(f => `<tr><td>${f.nombre}</td><td>${f.puntos}</td></tr>`).join('');
+        }
+
+        // Manejar el Login de Google
+        function handleCredentialResponse(response) {
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+            console.log("Bienvenido: " + payload.name);
+            
+            // Mostrar sección de carga de resultados
+            document.getElementById('seccion-partida').classList.remove('oculto');
+            
+            // Avisar a nuestro Google Sheet que alguien entró
+            fetch(URL_APPS_SCRIPT, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "login",
+                    email: payload.email,
+                    nombre: payload.name
+                })
+            });
+        }
+
+        // Procesar la imagen con Tesseract.js (OCR)
+        async function procesarImagen() {
+            const file = document.getElementById('foto-resultado').files[0];
+            if (!file) return alert("Sube una foto primero");
+
+            document.getElementById('estado-ocr').innerText = "Analizando imagen... (esto puede tardar)";
+            
+            const result = await Tesseract.recognize(file, 'eng');
+            console.log(result.data.text);
+            
+            alert("Lectura completada. Mira la consola para los datos (F12).");
+            // Aquí iría la lógica para enviar esos datos al Sheet como vimos antes
+        }
+
+        window.onload = cargarRanking;
+    </script>
+</body>
+</html>
