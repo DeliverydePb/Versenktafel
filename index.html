@@ -5,7 +5,7 @@
     <title>BdU - Versenktafel</title>
     <script src="config.js"></script>
     <style>
-        body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; }
+        body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; padding-top: 60px; }
         .panel { border: 1px solid #444; padding: 15px; background: #1a1d20; margin-bottom: 20px; box-shadow: inset 0 0 10px #000; }
         h1, h2 { color: #00ff00; border-bottom: 1px solid #00ff00; text-shadow: 0 0 5px #00ff00; }
         input, select { background: #000; color: #00ff00; border: 1px solid #444; padding: 8px; margin: 5px 0; width: 250px; display: block; }
@@ -17,11 +17,22 @@
         th, td { border: 1px solid #444; padding: 12px; text-align: left; }
         .link { color: #00ff00; text-decoration: underline; cursor: pointer; font-size: 0.8em; }
         
+        /* Cabecera de usuario logueado */
+        #user-header { position: absolute; top: 10px; right: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,255,0,0.1); padding: 5px 15px; border: 1px solid #00ff0044; }
+        #user-header strong { color: #00ff00; }
+        
         #global-ranking { border-top: 2px solid #00ff00; margin-top: 50px; }
         .mision-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #444; padding: 10px 0; }
+        .alerta-mision { color: #ff9900; font-weight: bold; border: 1px solid #ff9900; padding: 10px; }
     </style>
 </head>
 <body>
+
+    <!-- CABECERA DE SESIÓN -->
+    <div id="user-header" class="oculto">
+        <span>KALEUN: <strong id="header-nombre"></strong></span>
+        <button class="btn" style="border-color:red; color:red; padding: 5px 10px; font-size: 0.8em;" onclick="location.reload()">Cerrar Sesión</button>
+    </div>
 
     <h1>⚓ BdU - VERSENKTAFEL ⚓</h1>
 
@@ -48,25 +59,28 @@
     <!-- 2. AREA PRIVADA -->
     <div id="main-area" class="oculto">
         <div class="panel">
-            <h2 id="bienvenida"></h2>
+            <h2>CENTRO DE OPERACIONES</h2>
             
             <h3>Patrullas en Curso</h3>
             <div id="lista-misiones" style="margin-bottom: 15px;"></div>
             
             <hr>
             
-            <h3>Nueva Patrulla</h3>
-            <label for="tipo-sub">Seleccione su Sumergible:</label>
-            <select id="tipo-sub">
-                <option value="Tipo IIA">Tipo IIA (Bebé Lorient)</option>
-                <option value="Tipo VIIB">Tipo VIIB (Priet)</option>
-                <option value="Tipo VIIC">Tipo VIIC (El Caballo de Batalla)</option>
-                <option value="Tipo IXB">Tipo IXB (Largo Alcance)</option>
-                <option value="Tipo IXC">Tipo IXC</option>
-                <option value="Tipo XXI">Tipo XXI (Electroboote)</option>
-            </select>
-            <button class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
-            <button class="btn" style="border-color:red; color:red; margin-left: 10px;" onclick="location.reload()">Cerrar Sesión</button>
+            <div id="seccion-nueva-patrulla">
+                <h3>Nueva Patrulla</h3>
+                <label for="tipo-sub">Seleccione su Sumergible:</label>
+                <select id="tipo-sub">
+                    <option value="U-96">U-96</option>
+                    <option value="U-552">U-552</option>
+                    <option value="U-564">U-564</option>
+                    <option value="U-307">U-307</option>
+                </select>
+                <button class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
+            </div>
+
+            <div id="mensaje-bloqueo-patrulla" class="oculto">
+                <p class="alerta-mision">⚠️ TIENE UNA PATRULLA EN CURSO. Debe finalizarla o cancelarla antes de iniciar una nueva.</p>
+            </div>
         </div>
     </div>
 
@@ -127,7 +141,8 @@
                 usuario = res;
                 document.getElementById('auth-area').classList.add('oculto');
                 document.getElementById('main-area').classList.remove('oculto');
-                document.getElementById('bienvenida').innerText = "BIENVENIDO, HERR KALEUN " + res.nombre;
+                document.getElementById('user-header').classList.remove('oculto');
+                document.getElementById('header-nombre').innerText = res.nombre;
                 refrescar();
             } else {
                 alert(res.msg);
@@ -151,10 +166,18 @@
             }
 
             if (data.misiones) {
+                // Verificar si el usuario actual tiene una misión en curso
+                const misionPropia = data.misiones.find(m => m.n === usuario?.nombre);
+                
+                if(usuario) {
+                    document.getElementById('seccion-nueva-patrulla').classList.toggle('oculto', !!misionPropia);
+                    document.getElementById('mensaje-bloqueo-patrulla').classList.toggle('oculto', !misionPropia);
+                }
+
                 document.getElementById('lista-misiones').innerHTML = data.misiones.map(m => 
                     `<div class="mision-card">
                         <span>Patrulla de: <strong>${m.n}</strong></span>
-                        <button class="btn" style="padding: 5px 10px; font-size: 0.7em;" onclick="unirseMision('${m.id}')">Unirse</button>
+                        ${(usuario && m.n !== usuario.nombre) ? `<button class="btn" style="padding: 5px 10px; font-size: 0.7em;" onclick="unirseMision('${m.id}')">Unirse</button>` : ''}
                     </div>`
                 ).join('') || "<p>No hay patrullas en curso actualmente.</p>";
             }
@@ -175,7 +198,7 @@
         }
 
         async function unirseMision(misionId) {
-            const sub = prompt("¿Qué submarino utilizará para unirse a la manada de lobos?");
+            const sub = prompt("¿Qué submarino utilizará para unirse a la manada de lobos? (U-96, U-552, U-564, U-307)");
             if(!sub) return;
             
             const res = await api({
