@@ -19,7 +19,11 @@
         
         #user-header { position: absolute; top: 10px; right: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,255,0,0.1); padding: 5px 15px; border: 1px solid #00ff0044; }
         
+        /* ESTILOS DE MISIONES */
         .mision-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #444; padding: 10px 0; gap: 10px; }
+        .mision-activa { border: 1px solid #00ff00; background: rgba(0, 255, 0, 0.05); padding: 10px; border-radius: 4px; }
+        .badge-unido { background: #00ff00; color: #000; padding: 2px 6px; font-size: 0.7em; font-weight: bold; border-radius: 3px; margin-left: 10px; }
+        
         .mision-controls { display: flex; align-items: center; gap: 5px; }
         .mision-controls select { width: 160px; margin: 0; padding: 4px; font-size: 0.8em; }
         
@@ -37,7 +41,6 @@
 
     <h1>⚓ BdU - VERSENKTAFEL ⚓</h1>
 
-    <!-- 1. AREA DE AUTENTICACIÓN -->
     <div id="auth-area" class="panel">
         <div id="login-form">
             <h2>ACCESO COMANDANTE</h2>
@@ -46,7 +49,6 @@
             <button class="btn" onclick="login()">Entrar</button>
             <p>¿No registrado? <span class="link" onclick="toggleAuth(false)">Crear Cuenta</span></p>
         </div>
-
         <div id="registro-form" class="oculto">
             <h2>NUEVO RECLUTA</h2>
             <input type="text" id="r-nombre" placeholder="Nombre de Comandante">
@@ -57,16 +59,12 @@
         </div>
     </div>
 
-    <!-- 2. AREA PRIVADA -->
     <div id="main-area" class="oculto">
         <div class="panel">
             <h2>CENTRO DE OPERACIONES</h2>
-            
             <h3>Patrullas en Curso</h3>
             <div id="lista-misiones" style="margin-bottom: 15px;"></div>
-            
             <hr>
-            
             <div id="seccion-nueva-patrulla">
                 <h3>Nueva Patrulla</h3>
                 <label for="tipo-sub">Seleccione su Sumergible:</label>
@@ -79,10 +77,9 @@
                 </select>
                 <button class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
             </div>
-
             <div id="mensaje-bloqueo-patrulla" class="oculto">
                 <div class="alerta-mision">
-                    <p>⚠️ TIENE UNA PATRULLA EN CURSO.</p>
+                    <p id="texto-alerta">⚠️ TIENE UNA PATRULLA EN CURSO.</p>
                     <div style="display: flex; justify-content: center; gap: 20px;">
                         <button class="btn" onclick="entregarResultados()">📥 Entregar Resultados</button>
                         <button class="btn btn-danger" onclick="cancelarMision()">❌ Cancelar Patrulla</button>
@@ -92,7 +89,6 @@
         </div>
     </div>
 
-    <!-- 3. RANKING -->
     <div id="global-ranking" class="panel">
         <h2>📊 REGISTRO GLOBAL DE TONELAJE</h2>
         <table id="tabla-ranking">
@@ -129,7 +125,6 @@
             const email = document.getElementById('l-email').value;
             const pass = document.getElementById('l-pass').value;
             const res = await api({action: "login", email, pass});
-
             if(res.status === "ok") {
                 usuario = res;
                 document.getElementById('auth-area').classList.add('oculto');
@@ -137,9 +132,7 @@
                 document.getElementById('user-header').classList.remove('oculto');
                 document.getElementById('header-nombre').innerText = res.nombre;
                 refrescar();
-            } else {
-                alert(res.msg);
-            }
+            } else { alert(res.msg); }
         }
 
         async function refrescar() {
@@ -152,18 +145,36 @@
             }
 
             if (data.misiones) {
-                const misionPropia = data.misiones.find(m => m.n === usuario?.nombre);
+                // Buscamos si soy el creador O si estoy en la lista de participantes
+                const soyCreador = data.misiones.find(m => m.e === usuario?.email);
+                const soyParticipante = data.misiones.find(m => m.p && JSON.parse(m.p).some(p => p.email === usuario?.email));
                 
+                const enMision = soyCreador || soyParticipante;
+
                 if(usuario) {
-                    document.getElementById('seccion-nueva-patrulla').classList.toggle('oculto', !!misionPropia);
-                    document.getElementById('mensaje-bloqueo-patrulla').classList.toggle('oculto', !misionPropia);
+                    document.getElementById('seccion-nueva-patrulla').classList.toggle('oculto', !!enMision);
+                    document.getElementById('mensaje-bloqueo-patrulla').classList.toggle('oculto', !enMision);
+                    
+                    // Cambiar texto si soy invitado
+                    if(soyParticipante) {
+                        document.getElementById('texto-alerta').innerText = "⚓ UNIDO A LA MANADA DE LOBOS.";
+                    } else {
+                        document.getElementById('texto-alerta').innerText = "⚠️ TIENE UNA PATRULLA EN CURSO.";
+                    }
                 }
 
                 document.getElementById('lista-misiones').innerHTML = data.misiones.map(m => {
-                    const esMia = (usuario && m.n === usuario.nombre);
-                    return `<div class="mision-card">
-                        <span>Patrulla de: <strong>${m.n}</strong></span>
-                        ${(!esMia && usuario) ? `
+                    const participantes = m.p ? JSON.parse(m.p) : [];
+                    const esMiPropiaMision = (usuario && m.e === usuario.email);
+                    const yaEstoyUnido = participantes.some(p => p.email === usuario?.email);
+
+                    return `<div class="mision-card ${(esMiPropiaMision || yaEstoyUnido) ? 'mision-activa' : ''}">
+                        <span>
+                            Patrulla de: <strong>${m.n}</strong> 
+                            ${yaEstoyUnido ? '<span class="badge-unido">ESTÁS AQUÍ</span>' : ''}
+                            ${esMiPropiaMision ? '<span class="badge-unido" style="background:#ff9900">LÍDER</span>' : ''}
+                        </span>
+                        ${(!enMision && usuario) ? `
                             <div class="mision-controls">
                                 <select id="sub-join-${m.id}">
                                     <option value="">-- Sumergible --</option>
@@ -190,44 +201,23 @@
         async function unirseMision(misionId) {
             const sub = document.getElementById(`sub-join-${misionId}`).value;
             if(!sub) return alert("Seleccione un submarino.");
-            
             const res = await api({
                 action: "unirseMision",
                 idMision: misionId,
                 email: usuario.email,
-                nombre: usuario.nombre, // Añadido para asegurar identificación
+                nombre: usuario.nombre,
                 submarino: sub
             });
-            
-            if(res.status === "ok") {
-                alert("Unido a la manada.");
-                refrescar();
-            } else {
-                alert("Error: " + (res.msg || "El servidor rechazó la solicitud."));
-            }
+            if(res.status === "ok") { refrescar(); } else { alert(res.msg); }
         }
 
         async function cancelarMision() {
-            if(!confirm("¿Está seguro de que desea abortar la patrulla? No se guardarán los hundimientos.")) return;
-            
-            const res = await api({
-                action: "cancelarMision",
-                email: usuario.email,
-                nombre: usuario.nombre
-            });
-
-            if(res.status === "ok") {
-                alert("Patrulla cancelada. Regresando a la base.");
-                refrescar();
-            } else {
-                alert(res.msg);
-            }
+            if(!confirm("¿Está seguro de que desea abortar la patrulla?")) return;
+            const res = await api({ action: "cancelarMision", email: usuario.email });
+            if(res.status === "ok") { refrescar(); } else { alert(res.msg); }
         }
 
-        async function entregarResultados() {
-            alert("Preparando cuaderno de bitácora para el envío...");
-        }
-
+        async function entregarResultados() { alert("Bitácora lista para enviar."); }
         window.onload = () => { refrescar(); };
     </script>
 </body>
