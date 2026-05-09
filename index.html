@@ -2,132 +2,150 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Kriegsmarine Command</title>
+    <title>Kriegsmarine Command - BdU</title>
+    
+    <!-- Vinculación con tu archivo de configuración -->
+    <script src="config.js"></script>
+    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; }
-        h1, h2 { color: #f8f9fa; border-bottom: 1px solid #495057; }
-        .panel { border: 1px solid #495057; padding: 15px; margin-bottom: 15px; background: #1a1d20; }
-        .btn { background: #343a40; color: #00ff00; border: 1px solid #00ff00; padding: 10px; cursor: pointer; text-transform: uppercase; }
-        .btn:disabled { color: #555; border-color: #555; cursor: not-allowed; }
+        body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; line-height: 1.4; }
+        h1, h2 { color: #00ff00; border-bottom: 1px solid #00ff00; padding-bottom: 10px; text-shadow: 0 0 5px #00ff00; }
+        .panel { border: 1px solid #495057; padding: 15px; margin-bottom: 15px; background: #1a1d20; box-shadow: inset 0 0 10px #000; }
+        .btn { background: #1a1d20; color: #00ff00; border: 1px solid #00ff00; padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
+        .btn:hover { background: #00ff00; color: #000; }
+        .btn:disabled { color: #444; border-color: #444; cursor: not-allowed; }
         table { width: 100%; margin-top: 10px; border-collapse: collapse; }
-        th, td { padding: 10px; border: 1px solid #495057; text-align: left; }
+        th { background: #2b2f33; color: #00ff00; }
+        th, td { padding: 12px; border: 1px solid #495057; text-align: left; }
         .oculto { display: none; }
-        .alerta { color: #ffc107; font-weight: bold; }
+        .alerta { color: #ff3333; font-weight: bold; margin: 10px 0; border-left: 4px solid #ff3333; padding-left: 10px; }
     </style>
 </head>
 <body>
 
     <h1>⚓ CUARTEL GENERAL DE SUBMARINOS (BdU) ⚓</h1>
 
-    <!-- SECCIÓN 1: ACCESO -->
+    <!-- 1. IDENTIFICACIÓN -->
     <div id="login-area" class="panel">
-        <div id="g_id_onload" data-client_id="TU_CLIENT_ID_AQUI" data-callback="onSignIn"></div>
+        <h2>IDENTIFICACIÓN DE COMANDANTE</h2>
+        <div id="g_id_onload"></div>
         <div class="g_id_signin" data-type="standard"></div>
         <p id="user-info"></p>
     </div>
 
-    <!-- SECCIÓN 2: REGISTRO DE TONELAJE (Siempre visible) -->
+    <!-- 2. REGISTRO DE TONELAJE -->
     <div class="panel">
         <h2>📊 REGISTRO DE TONELAJE</h2>
         <table id="tabla-ranking">
-            <thead><tr><th>CAPITÁN</th><th>TONELAJE TOTAL</th></tr></thead>
-            <tbody></tbody>
+            <thead>
+                <tr><th>CAPITÁN</th><th>TONELAJE TOTAL</th></tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="2">Conectando con el Almirantazgo...</td></tr>
+            </tbody>
         </table>
     </div>
 
-    <!-- SECCIÓN 3: MISIONES (Solo tras login) -->
+    <!-- 3. GESTIÓN DE MISIONES -->
     <div id="misiones-area" class="panel oculto">
-        <h2>🗺️ MISIONES EN CURSO</h2>
+        <h2>🗺️ PIZARRA DE MISIONES ACTIVAS</h2>
         <div id="estado-usuario" class="alerta"></div>
-        <div id="lista-misiones"></div>
-        <br>
-        <button id="btn-crear" class="btn" onclick="crearMision()">Iniciar Nueva Patrulla</button>
         
-        <div id="area-resultados" class="oculto">
-            <hr>
-            <h3>Cargar Resultados de Patrulla</h3>
-            <input type="file" id="foto-ocr">
-            <button class="btn" onclick="alert('Funcionalidad en desarrollo')">Finalizar Misión</button>
+        <div id="lista-misiones"></div>
+
+        <div id="control-mision-propia" style="margin-top:20px;">
+            <button id="btn-crear" class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
+        </div>
+        
+        <div id="area-resultados" class="panel oculto" style="border-color: #00ff00; margin-top: 20px;">
+            <h3>📥 FINALIZAR PATRULLA</h3>
+            <p>Sube la captura de pantalla con los resultados finales:</p>
+            <input type="file" id="foto-ocr" accept="image/*">
+            <br><br>
+            <button class="btn" onclick="alert('Sistema de OCR en desarrollo.')">ENVIAR REPORTE AL BdU</button>
         </div>
     </div>
 
     <script>
-        const URL_API = "TU_URL_DE_APPS_SCRIPT_AQUI";
+        // Usamos las variables definidas en tu config.js
+        const URL_API = CONFIG.URL_API;
+
         let usuarioActual = null;
         let misionesActivas = [];
 
+        // Función para configurar el Login de Google usando el ID de tu config.js
+        function configurarLogin() {
+            const loginDiv = document.getElementById('g_id_onload');
+            if (loginDiv) {
+                loginDiv.setAttribute('data-client_id', CONFIG.CLIENT_ID);
+                loginDiv.setAttribute('data-callback', 'onSignIn');
+            }
+        }
+
         async function refrescarDatos() {
-            const r = await fetch(URL_API);
-            const data = await r.json();
-            
-            // Dibujar Ranking
-            document.querySelector("#tabla-ranking tbody").innerHTML = data.ranking.map(u => `<tr><td>${u.n}</td><td>${u.p} TN</td></tr>`).join('');
-            
-            misionesActivas = data.misiones;
-            actualizarInterfazMisiones();
+            try {
+                const r = await fetch(URL_API);
+                const data = await r.json();
+                const cuerpoTabla = document.querySelector("#tabla-ranking tbody");
+                cuerpoTabla.innerHTML = data.ranking.map(u => `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`).join('') || "<tr><td colspan='2'>Sin registros.</td></tr>";
+                misionesActivas = data.misiones;
+                actualizarInterfazMisiones();
+            } catch (e) { console.error("Error:", e); }
         }
 
         function onSignIn(response) {
             const payload = JSON.parse(atob(response.credential.split('.')[1]));
             usuarioActual = payload;
-            document.getElementById('user-info').innerText = "Capitán: " + payload.name;
+            document.getElementById('user-info').innerText = "Comandante: " + payload.name;
             document.getElementById('misiones-area').classList.remove('oculto');
-            document.getElementById('login-area').classList.add('oculto');
-            
+            document.getElementById('login-area').style.display = "none";
             fetch(URL_API, { method: 'POST', body: JSON.stringify({action:"login", email:payload.email, nombre:payload.name}) });
             refrescarDatos();
         }
 
         function actualizarInterfazMisiones() {
             if (!usuarioActual) return;
-
             const lista = document.getElementById('lista-misiones');
             const miMision = misionesActivas.find(m => m.creadorEmail === usuarioActual.email);
             const btnCrear = document.getElementById('btn-crear');
             const areaRes = document.getElementById('area-resultados');
+            const estadoMsg = document.getElementById('estado-usuario');
 
             if (miMision) {
-                btnCrear.disabled = true;
+                btnCrear.style.display = "none";
                 areaRes.classList.remove('oculto');
-                document.getElementById('estado-usuario').innerText = "TIENES UNA MISIÓN ACTIVA BAJO TU MANDO.";
+                estadoMsg.innerText = "⚠️ TIENES UNA PATRULLA ACTIVA.";
                 lista.innerHTML = "";
             } else {
-                btnCrear.disabled = false;
+                btnCrear.style.display = "block";
                 areaRes.classList.add('oculto');
-                document.getElementById('estado-usuario').innerText = "PATRULLAS DISPONIBLES PARA UNIRSE:";
+                estadoMsg.innerText = "PATRULLAS DISPONIBLES:";
                 lista.innerHTML = misionesActivas.map(m => `
-                    <div style="border:1px solid #444; padding:10px; margin:5px;">
-                        Comandante: ${m.creadorNombre} 
-                        <button class="btn" onclick="unirse('${m.id}')">Unirse</button>
+                    <div style="border:1px solid #444; padding:15px; margin:10px 0; background:#252a2e;">
+                        <strong>Misión de:</strong> ${m.creadorNombre} <br>
+                        <button class="btn" onclick="unirse('${m.id}')">⚓ UNIRSE</button>
                     </div>
-                `).join('') || "<p>No hay patrullas activas en este momento.</p>";
+                `).join('') || "<p>No hay patrullas activas.</p>";
             }
         }
 
         async function crearMision() {
-            await fetch(URL_API, { method: 'POST', body: JSON.stringify({
-                action: "crearMision", 
-                email: usuarioActual.email, 
-                nombreCreador: usuarioActual.name 
-            })});
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify({action: "crearMision", email: usuarioActual.email, nombreCreador: usuarioActual.name })});
             refrescarDatos();
         }
 
         async function unirse(id) {
-            const sub = prompt("¿En qué submarino participarás? (Ej: U-96)");
+            const sub = prompt("¿Submarino?");
             if(!sub) return;
-            await fetch(URL_API, { method: 'POST', body: JSON.stringify({
-                action: "unirseMision", 
-                idMision: id, 
-                email: usuarioActual.email, 
-                submarino: sub 
-            })});
-            alert("Te has unido a la misión. Espera a que el comandante suba los resultados.");
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify({action: "unirseMision", idMision: id, email: usuarioActual.email, submarino: sub })});
             refrescarDatos();
         }
 
-        window.onload = refrescarDatos;
+        window.onload = function() {
+            configurarLogin();
+            refrescarDatos();
+        };
     </script>
 </body>
 </html>
