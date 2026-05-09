@@ -17,13 +17,14 @@
         th, td { border: 1px solid #444; padding: 12px; text-align: left; }
         .link { color: #00ff00; text-decoration: underline; cursor: pointer; font-size: 0.8em; }
         
-        /* Cabecera de usuario logueado */
         #user-header { position: absolute; top: 10px; right: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,255,0,0.1); padding: 5px 15px; border: 1px solid #00ff0044; }
         #user-header strong { color: #00ff00; }
         
         #global-ranking { border-top: 2px solid #00ff00; margin-top: 50px; }
-        .mision-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #444; padding: 10px 0; }
-        .alerta-mision { color: #ff9900; font-weight: bold; border: 1px solid #ff9900; padding: 10px; }
+        .mision-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #444; padding: 10px 0; gap: 10px; }
+        .mision-controls { display: flex; align-items: center; gap: 5px; }
+        .mision-controls select { width: 160px; margin: 0; padding: 4px; font-size: 0.8em; }
+        .alerta-mision { color: #ff9900; font-weight: bold; border: 1px solid #ff9900; padding: 15px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -70,6 +71,7 @@
                 <h3>Nueva Patrulla</h3>
                 <label for="tipo-sub">Seleccione su Sumergible:</label>
                 <select id="tipo-sub">
+                    <option value="">-- Seleccione Submarino --</option>
                     <option value="U-96">U-96</option>
                     <option value="U-552">U-552</option>
                     <option value="U-564">U-564</option>
@@ -79,7 +81,10 @@
             </div>
 
             <div id="mensaje-bloqueo-patrulla" class="oculto">
-                <p class="alerta-mision">⚠️ TIENE UNA PATRULLA EN CURSO. Debe finalizarla o cancelarla antes de iniciar una nueva.</p>
+                <div class="alerta-mision">
+                    <p>⚠️ TIENE UNA PATRULLA EN CURSO.</p>
+                    <button class="btn" style="border-color:#00ff00; margin-top:10px;" onclick="entregarResultados()">📥 Entregar Resultados</button>
+                </div>
             </div>
         </div>
     </div>
@@ -166,7 +171,6 @@
             }
 
             if (data.misiones) {
-                // Verificar si el usuario actual tiene una misión en curso
                 const misionPropia = data.misiones.find(m => m.n === usuario?.nombre);
                 
                 if(usuario) {
@@ -174,17 +178,31 @@
                     document.getElementById('mensaje-bloqueo-patrulla').classList.toggle('oculto', !misionPropia);
                 }
 
-                document.getElementById('lista-misiones').innerHTML = data.misiones.map(m => 
-                    `<div class="mision-card">
+                document.getElementById('lista-misiones').innerHTML = data.misiones.map(m => {
+                    const esMia = (usuario && m.n === usuario.nombre);
+                    return `<div class="mision-card">
                         <span>Patrulla de: <strong>${m.n}</strong></span>
-                        ${(usuario && m.n !== usuario.nombre) ? `<button class="btn" style="padding: 5px 10px; font-size: 0.7em;" onclick="unirseMision('${m.id}')">Unirse</button>` : ''}
-                    </div>`
-                ).join('') || "<p>No hay patrullas en curso actualmente.</p>";
+                        ${(!esMia && usuario) ? `
+                            <div class="mision-controls">
+                                <select id="sub-join-${m.id}">
+                                    <option value="">-- Sumergible --</option>
+                                    <option value="U-96">U-96</option>
+                                    <option value="U-552">U-552</option>
+                                    <option value="U-564">U-564</option>
+                                    <option value="U-307">U-307</option>
+                                </select>
+                                <button class="btn" style="padding: 5px 10px; font-size: 0.7em;" onclick="unirseMision('${m.id}')">Unirse</button>
+                            </div>
+                        ` : ''}
+                    </div>`;
+                }).join('') || "<p>No hay patrullas en curso actualmente.</p>";
             }
         }
 
         async function crearMision() {
             const sub = document.getElementById('tipo-sub').value;
+            if(!sub) return alert("Debe seleccionar un submarino para iniciar la patrulla.");
+
             const res = await api({
                 action: "crearMision", 
                 email: usuario.email, 
@@ -192,14 +210,14 @@
                 submarino: sub
             });
             if(res.status === "ok") {
-                alert("Patrulla iniciada con el " + sub + ". ¡Buena caza!");
+                alert("Patrulla iniciada. ¡Buena caza!");
                 refrescar();
             }
         }
 
         async function unirseMision(misionId) {
-            const sub = prompt("¿Qué submarino utilizará para unirse a la manada de lobos? (U-96, U-552, U-564, U-307)");
-            if(!sub) return;
+            const sub = document.getElementById(`sub-join-${misionId}`).value;
+            if(!sub) return alert("Seleccione un submarino para unirse a la manada.");
             
             const res = await api({
                 action: "unirseMision",
@@ -209,11 +227,16 @@
             });
             
             if(res.status === "ok") {
-                alert("Se ha unido a la patrulla con éxito.");
+                alert("Confirmado. Se ha unido a la patrulla.");
                 refrescar();
             } else {
                 alert(res.msg || "Error al unirse.");
             }
+        }
+
+        async function entregarResultados() {
+            // Por ahora solo una alerta, luego programaremos la lógica de envío de datos
+            alert("Lógica de entrega en preparación. El BdU espera su informe de hundimientos.");
         }
 
         window.onload = () => {
