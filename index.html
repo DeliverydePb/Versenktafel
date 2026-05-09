@@ -1,224 +1,263 @@
 <!DOCTYPE html>
+<!--
+  index.html — Página de Login (Acceso al sistema)
+  
+  Esta es la primera página que ve el usuario cuando visita el sitio.
+  Si ya tiene una sesión activa, lo redirige automáticamente al dashboard.
+  
+  Estructura de archivos que necesita esta página:
+    css/style.css   → Los estilos visuales
+    js/config.js    → La URL del servidor
+    js/utils.js     → Funciones compartidas
+-->
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>BdU - Versenktafel</title>
-    <script src="config.js"></script>
-    <style>
-        body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; padding-top: 60px; }
-        .panel { border: 1px solid #444; padding: 15px; background: #1a1d20; margin-bottom: 20px; box-shadow: inset 0 0 10px #000; }
-        h1, h2 { color: #00ff00; border-bottom: 1px solid #00ff00; text-shadow: 0 0 5px #00ff00; }
-        input, select { background: #000; color: #00ff00; border: 1px solid #444; padding: 8px; margin: 5px 0; width: 250px; display: block; }
-        .btn { background: #1a1d20; color: #00ff00; border: 1px solid #00ff00; padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
-        .btn:hover { background: #00ff00; color: #000; }
-        .oculto { display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #2b2f33; color: #00ff00; }
-        th, td { border: 1px solid #444; padding: 12px; text-align: left; }
-        .link { color: #00ff00; text-decoration: underline; cursor: pointer; font-size: 0.8em; }
-        
-        #user-header { position: absolute; top: 10px; right: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,255,0,0.1); padding: 5px 15px; border: 1px solid #00ff0044; }
-        
-        /* ESTILOS DE MISIONES */
-        .mision-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #444; padding: 10px 0; gap: 10px; }
-        .mision-activa { border: 1px solid #00ff00; background: rgba(0, 255, 0, 0.05); padding: 10px; border-radius: 4px; }
-        .badge-unido { background: #00ff00; color: #000; padding: 2px 6px; font-size: 0.7em; font-weight: bold; border-radius: 3px; margin-left: 10px; }
-        
-        .mision-controls { display: flex; align-items: center; gap: 5px; }
-        .mision-controls select { width: 160px; margin: 0; padding: 4px; font-size: 0.8em; }
-        
-        .alerta-mision { color: #ff9900; font-weight: bold; border: 1px solid #ff9900; padding: 15px; margin-top: 10px; text-align: center; }
-        .btn-danger { border-color: #ff4444; color: #ff4444; margin-top: 10px; }
-        .btn-danger:hover { background: #ff4444; color: #000; }
-    </style>
+  <meta charset="UTF-8">
+  <!-- viewport: hace que la página se vea bien en celulares -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Silent Hunters League — Acceso</title>
+  
+  <!-- Favicon: el ícono que aparece en la pestaña del navegador -->
+  <!-- Por ahora usamos un emoji; después podés agregar un .ico real -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚢</text></svg>">
+  
+  <!-- Nuestros estilos -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <div id="user-header" class="oculto">
-        <span>KALEUN: <strong id="header-nombre" style="color: #00ff00;"></strong></span>
-        <button class="btn" style="border-color:red; color:red; padding: 5px 10px; font-size: 0.8em;" onclick="location.reload()">Cerrar Sesión</button>
-    </div>
+  <!-- ── Encabezado del sitio ─────────────────────────────── -->
+  <header class="site-header">
+    
+    <!-- Ícono circular con animación de sonar -->
+    <div class="logo-badge" role="img" aria-label="Logo">⚓</div>
+    
+    <h1 class="site-title">Silent Hunters</h1>
+    <p class="site-subtitle">Kriegsmarine Operations League</p>
+    
+  </header>
 
-    <h1>⚓ BdU - VERSENKTAFEL ⚓</h1>
-
-    <div id="auth-area" class="panel">
-        <div id="login-form">
-            <h2>ACCESO COMANDANTE</h2>
-            <input type="email" id="l-email" placeholder="Correo Electrónico">
-            <input type="password" id="l-pass" placeholder="Clave de Acceso">
-            <button class="btn" onclick="login()">Entrar</button>
-            <p>¿No registrado? <span class="link" onclick="toggleAuth(false)">Crear Cuenta</span></p>
+  <!-- ── Panel principal: el formulario de login ──────────── -->
+  <main>
+    <div class="panel">
+      
+      <h2 class="panel-titulo">Acceso al Sistema</h2>
+      <hr class="panel-separador">
+      
+      <!-- Alerta: se muestra si hay errores o mensajes.
+           Por defecto está oculta (display:none en CSS).
+           El JS la hace visible cuando es necesario. -->
+      <div id="alerta" class="alerta" role="alert" aria-live="polite"></div>
+      
+      <!-- El formulario de login.
+           onsubmit="return false" evita que la página se recargue
+           al hacer clic en Enviar; el JS maneja todo. -->
+      <form id="form-login" onsubmit="return false" novalidate>
+        
+        <!-- Campo: Dirección de email -->
+        <div class="form-grupo">
+          <label for="email">📡 Dirección de Transmisión (E-mail)</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="comandante@flota.com"
+            autocomplete="email"
+            required
+          >
+          <!-- Mensaje de error específico para este campo -->
+          <span id="email-error" class="campo-error" role="alert"></span>
         </div>
-        <div id="registro-form" class="oculto">
-            <h2>NUEVO RECLUTA</h2>
-            <input type="text" id="r-nombre" placeholder="Nombre de Comandante">
-            <input type="email" id="r-email" placeholder="Correo Electrónico">
-            <input type="password" id="r-pass" placeholder="Clave de Acceso">
-            <button class="btn" onclick="registrar()">Registrarse</button>
-            <p><span class="link" onclick="toggleAuth(true)">Volver al Login</span></p>
+        
+        <!-- Campo: Contraseña -->
+        <div class="form-grupo">
+          <label for="contrasena">🔐 Código de Acceso</label>
+          <input
+            type="password"
+            id="contrasena"
+            name="contrasena"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          >
+          <span id="contrasena-error" class="campo-error" role="alert"></span>
         </div>
+        
+        <!-- Botón de envío -->
+        <button type="submit" class="btn-primario" id="btn-login">
+          ▶ Conectar
+        </button>
+        
+      </form>
+      
+      <!-- Links de navegación entre páginas -->
+      <nav class="nav-links" aria-label="Navegación auxiliar">
+        <a href="recovery.html">¿Olvidaste tu código de acceso?</a>
+        <br>
+        <a href="register.html">Nuevo Comandante → Registrarse</a>
+      </nav>
+      
+      <!-- Decoración: muestra "profundidad" como en un submarino -->
+      <div class="profundidad" aria-hidden="true">PROFUNDIDAD: 150m — RUMBO: 270°</div>
+      
     </div>
+  </main>
+  
+  <!-- ── Pie de página ─────────────────────────────────────── -->
+  <footer class="site-footer" aria-label="Pie de página">
+    SILENT HUNTERS LEAGUE · EST. 2024 · OPERACIONES SUBSUPERFICIALES
+  </footer>
 
-    <div id="main-area" class="oculto">
-        <div class="panel">
-            <h2>CENTRO DE OPERACIONES</h2>
-            <h3>Patrullas en Curso</h3>
-            <div id="lista-misiones" style="margin-bottom: 15px;"></div>
-            <hr>
-            <div id="seccion-nueva-patrulla">
-                <h3>Nueva Patrulla</h3>
-                <label for="tipo-sub">Seleccione su Sumergible:</label>
-                <select id="tipo-sub">
-                    <option value="">-- Seleccione Submarino --</option>
-                    <option value="U-96">U-96</option>
-                    <option value="U-552">U-552</option>
-                    <option value="U-564">U-564</option>
-                    <option value="U-307">U-307</option>
-                </select>
-                <button class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
-            </div>
-            <div id="mensaje-bloqueo-patrulla" class="oculto">
-                <div class="alerta-mision">
-                    <p id="texto-alerta">⚠️ TIENE UNA PATRULLA EN CURSO.</p>
-                    <div style="display: flex; justify-content: center; gap: 20px;">
-                        <button class="btn" onclick="entregarResultados()">📥 Entregar Resultados</button>
-                        <button class="btn btn-danger" onclick="cancelarMision()">❌ Cancelar Patrulla</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <!-- ── Scripts ───────────────────────────────────────────── -->
+  <!-- Los scripts van al final del body para que el HTML cargue primero -->
+  
+  <!-- 1. Primero la configuración (define CONFIG) -->
+  <script src="js/config.js"></script>
+  
+  <!-- 2. Luego las utilidades (usa CONFIG, define funciones) -->
+  <script src="js/utils.js"></script>
+  
+  <!-- 3. La lógica específica de esta página -->
+  <script>
+    /* ── Verificar si ya hay una sesión activa ────────────────
+       Cuando la página carga, revisamos si el usuario ya
+       se había logueado antes. Si es así, lo mandamos directo
+       al dashboard sin pasar por el login.
+       ─────────────────────────────────────────────────────── */
+    (function verificarSesionExistente() {
+      const sesion = obtenerSesion();
+      if (sesion) {
+        // Ya está logueado, lo redirigimos al dashboard
+        window.location.href = 'dashboard.html';
+      }
+    })(); // Los paréntesis del final hacen que se ejecute inmediatamente
 
-    <div id="global-ranking" class="panel">
-        <h2>📊 REGISTRO GLOBAL DE TONELAJE</h2>
-        <table id="tabla-ranking">
-            <thead>
-                <tr><th>CAPITÁN</th><th>TONELAJE</th></tr>
-            </thead>
-            <tbody>
-                <tr><td colspan="2">Cargando datos...</td></tr>
-            </tbody>
-        </table>
-    </div>
 
-    <script>
-        let usuario = null;
-
-        function toggleAuth(showLogin) {
-            document.getElementById('login-form').classList.toggle('oculto', !showLogin);
-            document.getElementById('registro-form').classList.toggle('oculto', showLogin);
+    /* ── Lógica del formulario de login ──────────────────────
+       Esperamos a que todo el HTML esté cargado antes de 
+       agregar los "event listeners" (escuchadores de eventos).
+       ─────────────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function() {
+      
+      // Obtenemos referencias a los elementos del DOM (la página)
+      const form         = document.getElementById('form-login');
+      const btnLogin     = document.getElementById('btn-login');
+      const inputEmail   = document.getElementById('email');
+      const inputClave   = document.getElementById('contrasena');
+      
+      /* Cuando el usuario envía el formulario ─────────────── */
+      form.addEventListener('submit', async function() {
+        
+        // ── Paso 1: Limpiar errores anteriores ──────────────
+        ocultarAlerta('alerta');
+        limpiarErroresCampos();
+        
+        // ── Paso 2: Leer los valores ingresados ─────────────
+        const email     = inputEmail.value.trim();     // .trim() elimina espacios extra
+        const contrasena = inputClave.value;
+        
+        // ── Paso 3: Validar los campos ──────────────────────
+        let hayErrores = false;
+        
+        if (!email) {
+          mostrarErrorCampo('email', 'email-error', 'Ingresá tu dirección de e-mail.');
+          hayErrores = true;
+        } else if (!validarEmail(email)) {
+          mostrarErrorCampo('email', 'email-error', 'El formato del e-mail no es válido.');
+          hayErrores = true;
         }
-
-        async function api(params) {
-            try {
-                const resp = await fetch(CONFIG.URL_API, {
-                    method: 'POST',
-                    body: JSON.stringify(params)
-                });
-                return await resp.json();
-            } catch (e) {
-                return { status: "error", msg: "Error de red o CORS." };
-            }
+        
+        if (!contrasena) {
+          mostrarErrorCampo('contrasena', 'contrasena-error', 'Ingresá tu código de acceso.');
+          hayErrores = true;
         }
-
-        async function login() {
-            const email = document.getElementById('l-email').value;
-            const pass = document.getElementById('l-pass').value;
-            const res = await api({action: "login", email, pass});
-            if(res.status === "ok") {
-                usuario = res;
-                document.getElementById('auth-area').classList.add('oculto');
-                document.getElementById('main-area').classList.remove('oculto');
-                document.getElementById('user-header').classList.remove('oculto');
-                document.getElementById('header-nombre').innerText = res.nombre;
-                refrescar();
-            } else { alert(res.msg); }
+        
+        // Si hay errores, no continuamos
+        if (hayErrores) return;
+        
+        // ── Paso 4: Deshabilitar el botón para evitar doble envío
+        btnLogin.disabled = true;
+        btnLogin.classList.add('cargando');
+        btnLogin.textContent = '▶ Verificando';
+        
+        // ── Paso 5: Hashear la contraseña antes de enviarla ─
+        // NUNCA enviamos la contraseña en texto plano
+        const claveHash = await hashearContrasena(contrasena);
+        
+        // ── Paso 6: Enviar los datos al servidor ────────────
+        const resultado = await pedirAlServidor('login', {
+          email:    email,
+          claveHash: claveHash,
+        });
+        
+        // ── Paso 7: Procesar la respuesta del servidor ──────
+        if (resultado.exito) {
+          
+          // Login exitoso: guardamos la sesión en el navegador
+          guardarSesion({
+            comandante: resultado.comandante,
+            email:      resultado.email,
+          });
+          
+          // Mostramos mensaje y redirigimos al dashboard
+          mostrarAlerta('alerta', '✓ Conexión establecida. Redirigiendo...', 'exito');
+          
+          // Esperamos un segundo para que el usuario vea el mensaje
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1000);
+          
+        } else {
+          
+          // Login fallido: mostramos el error
+          mostrarAlerta('alerta', resultado.mensaje || 'Credenciales incorrectas.', 'error');
+          
+          // Rehabilitamos el botón para que pueda intentar de nuevo
+          btnLogin.disabled = false;
+          btnLogin.classList.remove('cargando');
+          btnLogin.textContent = '▶ Conectar';
         }
-
-        async function refrescar() {
-            const data = await api({action: "get"});
-            
-            if (data.ranking) {
-                document.querySelector("#tabla-ranking tbody").innerHTML = data.ranking.map(u => 
-                    `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`
-                ).join('') || "<tr><td colspan='2'>Sin registros.</td></tr>";
-            }
-
-            if (data.misiones) {
-                // Buscamos si soy el creador O si estoy en la lista de participantes
-                const soyCreador = data.misiones.find(m => m.e === usuario?.email);
-                const soyParticipante = data.misiones.find(m => m.p && JSON.parse(m.p).some(p => p.email === usuario?.email));
-                
-                const enMision = soyCreador || soyParticipante;
-
-                if(usuario) {
-                    document.getElementById('seccion-nueva-patrulla').classList.toggle('oculto', !!enMision);
-                    document.getElementById('mensaje-bloqueo-patrulla').classList.toggle('oculto', !enMision);
-                    
-                    // Cambiar texto si soy invitado
-                    if(soyParticipante) {
-                        document.getElementById('texto-alerta').innerText = "⚓ UNIDO A LA MANADA DE LOBOS.";
-                    } else {
-                        document.getElementById('texto-alerta').innerText = "⚠️ TIENE UNA PATRULLA EN CURSO.";
-                    }
-                }
-
-                document.getElementById('lista-misiones').innerHTML = data.misiones.map(m => {
-                    const participantes = m.p ? JSON.parse(m.p) : [];
-                    const esMiPropiaMision = (usuario && m.e === usuario.email);
-                    const yaEstoyUnido = participantes.some(p => p.email === usuario?.email);
-
-                    return `<div class="mision-card ${(esMiPropiaMision || yaEstoyUnido) ? 'mision-activa' : ''}">
-                        <span>
-                            Patrulla de: <strong>${m.n}</strong> 
-                            ${yaEstoyUnido ? '<span class="badge-unido">ESTÁS AQUÍ</span>' : ''}
-                            ${esMiPropiaMision ? '<span class="badge-unido" style="background:#ff9900">LÍDER</span>' : ''}
-                        </span>
-                        ${(!enMision && usuario) ? `
-                            <div class="mision-controls">
-                                <select id="sub-join-${m.id}">
-                                    <option value="">-- Sumergible --</option>
-                                    <option value="U-96">U-96</option>
-                                    <option value="U-552">U-552</option>
-                                    <option value="U-564">U-564</option>
-                                    <option value="U-307">U-307</option>
-                                </select>
-                                <button class="btn" style="padding: 5px 10px; font-size: 0.7em;" onclick="unirseMision('${m.id}')">Unirse</button>
-                            </div>
-                        ` : ''}
-                    </div>`;
-                }).join('') || "<p>No hay patrullas en curso.</p>";
-            }
+      });
+      
+      
+      /* ── Función auxiliar: mostrar error en un campo ─────── */
+      function mostrarErrorCampo(idCampo, idError, mensaje) {
+        const campo = document.getElementById(idCampo);
+        const error = document.getElementById(idError);
+        if (campo) campo.classList.add('invalido');
+        if (error) {
+          error.textContent = mensaje;
+          error.style.display = 'block';
         }
-
-        async function crearMision() {
-            const sub = document.getElementById('tipo-sub').value;
-            if(!sub) return alert("Seleccione un submarino.");
-            const res = await api({action: "crearMision", email: usuario.email, nombre: usuario.nombre, submarino: sub});
-            if(res.status === "ok") { refrescar(); } else { alert(res.msg); }
-        }
-
-        async function unirseMision(misionId) {
-            const sub = document.getElementById(`sub-join-${misionId}`).value;
-            if(!sub) return alert("Seleccione un submarino.");
-            const res = await api({
-                action: "unirseMision",
-                idMision: misionId,
-                email: usuario.email,
-                nombre: usuario.nombre,
-                submarino: sub
-            });
-            if(res.status === "ok") { refrescar(); } else { alert(res.msg); }
-        }
-
-        async function cancelarMision() {
-            if(!confirm("¿Está seguro de que desea abortar la patrulla?")) return;
-            const res = await api({ action: "cancelarMision", email: usuario.email });
-            if(res.status === "ok") { refrescar(); } else { alert(res.msg); }
-        }
-
-        async function entregarResultados() { alert("Bitácora lista para enviar."); }
-        window.onload = () => { refrescar(); };
-    </script>
+      }
+      
+      /* ── Función auxiliar: limpiar todos los errores ─────── */
+      function limpiarErroresCampos() {
+        // Quitamos la clase 'invalido' de todos los campos
+        document.querySelectorAll('input.invalido').forEach(i => i.classList.remove('invalido'));
+        // Ocultamos todos los mensajes de error
+        document.querySelectorAll('.campo-error').forEach(e => {
+          e.style.display = 'none';
+          e.textContent = '';
+        });
+      }
+      
+      /* ── Limpiar error cuando el usuario empieza a escribir ─
+         Mejora la experiencia: el error desaparece apenas el 
+         usuario intenta corregirlo.
+         ─────────────────────────────────────────────────────── */
+      [inputEmail, inputClave].forEach(input => {
+        input.addEventListener('input', function() {
+          this.classList.remove('invalido');
+          // Ocultamos el error del campo hermano (.campo-error siguiente al input)
+          const errorSpan = this.parentElement.querySelector('.campo-error');
+          if (errorSpan) errorSpan.style.display = 'none';
+        });
+      });
+      
+    }); // Fin de DOMContentLoaded
+    
+  </script>
+  
 </body>
 </html>
