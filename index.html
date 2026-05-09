@@ -3,66 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <title>Kriegsmarine Command - BdU</title>
-    
-    <!-- Cargamos tu configuración PRIMERO -->
     <script src="config.js"></script>
-    
-    <!-- Cargamos la librería de Google -->
     <script src="https://accounts.google.com/gsi/client"></script>
-
     <style>
         body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; line-height: 1.4; }
         h1, h2 { color: #00ff00; border-bottom: 1px solid #00ff00; padding-bottom: 10px; text-shadow: 0 0 5px #00ff00; }
         .panel { border: 1px solid #495057; padding: 15px; margin-bottom: 15px; background: #1a1d20; box-shadow: inset 0 0 10px #000; }
-        .btn { background: #1a1d20; color: #00ff00; border: 1px solid #00ff00; padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
+        .btn { background: #1a1d20; color: #00ff00; border: 1px solid #00ff00; padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; margin: 5px 0; }
         .btn:hover { background: #00ff00; color: #000; }
-        .btn:disabled { color: #444; border-color: #444; cursor: not-allowed; }
+        .btn-cancelar { color: #ff3333; border-color: #ff3333; }
+        .btn-cancelar:hover { background: #ff3333; color: #fff; }
         table { width: 100%; margin-top: 10px; border-collapse: collapse; }
         th { background: #2b2f33; color: #00ff00; }
         th, td { padding: 12px; border: 1px solid #495057; text-align: left; }
         .oculto { display: none; }
         .alerta { color: #ff3333; font-weight: bold; margin: 10px 0; border-left: 4px solid #ff3333; padding-left: 10px; }
+        select { background: #1a1d20; color: #00ff00; border: 1px solid #00ff00; padding: 5px; font-family: inherit; }
     </style>
 </head>
 <body>
 
     <h1>⚓ CUARTEL GENERAL DE SUBMARINOS (BdU) ⚓</h1>
 
-    <!-- 1. IDENTIFICACIÓN -->
     <div id="login-area" class="panel">
         <h2>IDENTIFICACIÓN DE COMANDANTE</h2>
-        <!-- El botón se dibujará aquí automáticamente -->
         <div id="boton-google"></div>
         <p id="user-info"></p>
     </div>
 
-    <!-- 2. REGISTRO DE TONELAJE -->
     <div class="panel">
         <h2>📊 REGISTRO DE TONELAJE</h2>
         <table id="tabla-ranking">
-            <thead>
-                <tr><th>CAPITÁN</th><th>TONELAJE TOTAL</th></tr>
-            </thead>
-            <tbody>
-                <tr><td colspan="2">Conectando con el Almirantazgo...</td></tr>
-            </tbody>
+            <thead><tr><th>CAPITÁN</th><th>TONELAJE TOTAL</th></tr></thead>
+            <tbody><tr><td colspan="2">Conectando...</td></tr></tbody>
         </table>
     </div>
 
-    <!-- 3. GESTIÓN DE MISIONES -->
     <div id="misiones-area" class="panel oculto">
         <h2>🗺️ PIZARRA DE MISIONES ACTIVAS</h2>
         <div id="estado-usuario" class="alerta"></div>
         <div id="lista-misiones"></div>
+
         <div id="control-mision-propia" style="margin-top:20px;">
-            <button id="btn-crear" class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
-        </div>
-        <div id="area-resultados" class="panel oculto" style="border-color: #00ff00; margin-top: 20px;">
-            <h3>📥 FINALIZAR PATRULLA</h3>
-            <p>Sube la captura de pantalla con los resultados finales:</p>
-            <input type="file" id="foto-ocr" accept="image/*">
-            <br><br>
-            <button class="btn" onclick="alert('Sistema de OCR en desarrollo.')">ENVIAR REPORTE AL BdU</button>
+            <div id="setup-mision">
+                <label>Selecciona tu submarino para la patrulla:</label><br>
+                <select id="sub-creador">
+                    <option value="U-96">U-96</option>
+                    <option value="U-552">U-552</option>
+                    <option value="U-564">U-564</option>
+                    <option value="U-307">U-307</option>
+                </select><br><br>
+                <button id="btn-crear" class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
+            </div>
+            
+            <div id="area-gestion-activa" class="oculto">
+                <button class="btn btn-cancelar" onclick="cancelarMision()">❌ Cancelar Patrulla</button>
+                <div class="panel" style="border-color: #00ff00; margin-top: 20px;">
+                    <h3>📥 REPORTAR RESULTADOS</h3>
+                    <input type="file" id="foto-ocr" accept="image/*">
+                    <button class="btn" onclick="alert('OCR en desarrollo')">ENVIAR REPORTE</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -70,33 +71,19 @@
         let usuarioActual = null;
         let misionesActivas = [];
 
-        // Esta función inicializa el botón de Google usando los datos de config.js
         function inicializarGoogle() {
-            if (typeof CONFIG === 'undefined' || !CONFIG.CLIENT_ID) {
-                console.error("Error: No se encontró CONFIG.CLIENT_ID en config.js");
-                return;
-            }
-
-            google.accounts.id.initialize({
-                client_id: CONFIG.CLIENT_ID,
-                callback: onSignIn
-            });
-
-            google.accounts.id.renderButton(
-                document.getElementById("boton-google"),
-                { theme: "outline", size: "large" }
-            );
+            google.accounts.id.initialize({ client_id: CONFIG.CLIENT_ID, callback: onSignIn });
+            google.accounts.id.renderButton(document.getElementById("boton-google"), { theme: "outline", size: "large" });
         }
 
         async function refrescarDatos() {
             try {
                 const r = await fetch(CONFIG.URL_API);
                 const data = await r.json();
-                const cuerpoTabla = document.querySelector("#tabla-ranking tbody");
-                cuerpoTabla.innerHTML = data.ranking.map(u => `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`).join('') || "<tr><td colspan='2'>Sin registros.</td></tr>";
+                document.querySelector("#tabla-ranking tbody").innerHTML = data.ranking.map(u => `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`).join('') || "<tr><td colspan='2'>Sin registros.</td></tr>";
                 misionesActivas = data.misiones;
                 actualizarInterfazMisiones();
-            } catch (e) { console.error("Error en refrescarDatos:", e); }
+            } catch (e) { console.error(e); }
         }
 
         function onSignIn(response) {
@@ -113,22 +100,25 @@
             if (!usuarioActual) return;
             const lista = document.getElementById('lista-misiones');
             const miMision = misionesActivas.find(m => m.creadorEmail === usuarioActual.email);
-            const btnCrear = document.getElementById('btn-crear');
-            const areaRes = document.getElementById('area-resultados');
-            const estadoMsg = document.getElementById('estado-usuario');
-
+            
             if (miMision) {
-                btnCrear.style.display = "none";
-                areaRes.classList.remove('oculto');
-                estadoMsg.innerText = "⚠️ TIENES UNA PATRULLA ACTIVA.";
+                document.getElementById('setup-mision').classList.add('oculto');
+                document.getElementById('area-gestion-activa').classList.remove('oculto');
+                document.getElementById('estado-usuario').innerText = "⚠️ TIENES UNA PATRULLA ACTIVA.";
                 lista.innerHTML = "";
             } else {
-                btnCrear.style.display = "block";
-                areaRes.classList.add('oculto');
-                estadoMsg.innerText = "PATRULLAS DISPONIBLES:";
+                document.getElementById('setup-mision').classList.remove('oculto');
+                document.getElementById('area-gestion-activa').classList.add('oculto');
+                document.getElementById('estado-usuario').innerText = "PATRULLAS DISPONIBLES:";
                 lista.innerHTML = misionesActivas.map(m => `
                     <div style="border:1px solid #444; padding:15px; margin:10px 0; background:#252a2e;">
-                        <strong>Misión de:</strong> ${m.creadorNombre} <br>
+                        <strong>Comandante:</strong> ${m.creadorNombre} <br><br>
+                        <select id="sub-unirse-${m.id}">
+                            <option value="U-96">U-96</option>
+                            <option value="U-552">U-552</option>
+                            <option value="U-564">U-564</option>
+                            <option value="U-307">U-307</option>
+                        </select>
                         <button class="btn" onclick="unirse('${m.id}')">⚓ UNIRSE</button>
                     </div>
                 `).join('') || "<p>No hay patrullas activas.</p>";
@@ -136,22 +126,43 @@
         }
 
         async function crearMision() {
-            await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({action: "crearMision", email: usuarioActual.email, nombreCreador: usuarioActual.name })});
-            refrescarDatos();
+            const sub = document.getElementById('sub-creador').value;
+            const res = await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({
+                action: "crearMision", 
+                email: usuarioActual.email, 
+                nombreCreador: usuarioActual.name,
+                submarino: sub
+            })});
+            
+            if(res.ok) {
+                descargarArchivoMision(sub);
+                refrescarDatos();
+            }
         }
 
         async function unirse(id) {
-            const sub = prompt("¿Submarino?");
-            if(!sub) return;
+            const sub = document.getElementById(`sub-unirse-${id}`).value;
             await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({action: "unirseMision", idMision: id, email: usuarioActual.email, submarino: sub })});
             refrescarDatos();
         }
 
-        // Ejecutar todo cuando la ventana cargue
-        window.onload = function() {
-            inicializarGoogle();
+        async function cancelarMision() {
+            if(!confirm("¿Seguro que deseas cancelar la patrulla? Se borrará de la pizarra.")) return;
+            await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({action: "cancelarMision", email: usuarioActual.email })});
             refrescarDatos();
-        };
+        }
+
+        function descargarArchivoMision(submarino) {
+            const texto = `ORDEN DE OPERACIONES - BdU\n--------------------------\nComandante: ${usuarioActual.name}\nSubmarino: ${submarino}\nFecha: ${new Date().toLocaleString()}\n\nBuena caza, Herr Kaleun.`;
+            const blob = new Blob([texto], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mision_${submarino}.txt`;
+            a.click();
+        }
+
+        window.onload = function() { inicializarGoogle(); refrescarDatos(); };
     </script>
 </body>
 </html>
