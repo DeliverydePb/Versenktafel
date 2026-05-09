@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <title>Kriegsmarine Command - BdU</title>
     
-    <!-- Vinculación con tu archivo de configuración -->
+    <!-- Cargamos tu configuración PRIMERO -->
     <script src="config.js"></script>
     
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Cargamos la librería de Google -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+
     <style>
         body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; line-height: 1.4; }
         h1, h2 { color: #00ff00; border-bottom: 1px solid #00ff00; padding-bottom: 10px; text-shadow: 0 0 5px #00ff00; }
@@ -29,8 +31,8 @@
     <!-- 1. IDENTIFICACIÓN -->
     <div id="login-area" class="panel">
         <h2>IDENTIFICACIÓN DE COMANDANTE</h2>
-        <div id="g_id_onload"></div>
-        <div class="g_id_signin" data-type="standard"></div>
+        <!-- El botón se dibujará aquí automáticamente -->
+        <div id="boton-google"></div>
         <p id="user-info"></p>
     </div>
 
@@ -51,13 +53,10 @@
     <div id="misiones-area" class="panel oculto">
         <h2>🗺️ PIZARRA DE MISIONES ACTIVAS</h2>
         <div id="estado-usuario" class="alerta"></div>
-        
         <div id="lista-misiones"></div>
-
         <div id="control-mision-propia" style="margin-top:20px;">
             <button id="btn-crear" class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
         </div>
-        
         <div id="area-resultados" class="panel oculto" style="border-color: #00ff00; margin-top: 20px;">
             <h3>📥 FINALIZAR PATRULLA</h3>
             <p>Sube la captura de pantalla con los resultados finales:</p>
@@ -68,30 +67,36 @@
     </div>
 
     <script>
-        // Usamos las variables definidas en tu config.js
-        const URL_API = CONFIG.URL_API;
-
         let usuarioActual = null;
         let misionesActivas = [];
 
-        // Función para configurar el Login de Google usando el ID de tu config.js
-        function configurarLogin() {
-            const loginDiv = document.getElementById('g_id_onload');
-            if (loginDiv) {
-                loginDiv.setAttribute('data-client_id', CONFIG.CLIENT_ID);
-                loginDiv.setAttribute('data-callback', 'onSignIn');
+        // Esta función inicializa el botón de Google usando los datos de config.js
+        function inicializarGoogle() {
+            if (typeof CONFIG === 'undefined' || !CONFIG.CLIENT_ID) {
+                console.error("Error: No se encontró CONFIG.CLIENT_ID en config.js");
+                return;
             }
+
+            google.accounts.id.initialize({
+                client_id: CONFIG.CLIENT_ID,
+                callback: onSignIn
+            });
+
+            google.accounts.id.renderButton(
+                document.getElementById("boton-google"),
+                { theme: "outline", size: "large" }
+            );
         }
 
         async function refrescarDatos() {
             try {
-                const r = await fetch(URL_API);
+                const r = await fetch(CONFIG.URL_API);
                 const data = await r.json();
                 const cuerpoTabla = document.querySelector("#tabla-ranking tbody");
                 cuerpoTabla.innerHTML = data.ranking.map(u => `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`).join('') || "<tr><td colspan='2'>Sin registros.</td></tr>";
                 misionesActivas = data.misiones;
                 actualizarInterfazMisiones();
-            } catch (e) { console.error("Error:", e); }
+            } catch (e) { console.error("Error en refrescarDatos:", e); }
         }
 
         function onSignIn(response) {
@@ -100,7 +105,7 @@
             document.getElementById('user-info').innerText = "Comandante: " + payload.name;
             document.getElementById('misiones-area').classList.remove('oculto');
             document.getElementById('login-area').style.display = "none";
-            fetch(URL_API, { method: 'POST', body: JSON.stringify({action:"login", email:payload.email, nombre:payload.name}) });
+            fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({action:"login", email:payload.email, nombre:payload.name}) });
             refrescarDatos();
         }
 
@@ -131,19 +136,20 @@
         }
 
         async function crearMision() {
-            await fetch(URL_API, { method: 'POST', body: JSON.stringify({action: "crearMision", email: usuarioActual.email, nombreCreador: usuarioActual.name })});
+            await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({action: "crearMision", email: usuarioActual.email, nombreCreador: usuarioActual.name })});
             refrescarDatos();
         }
 
         async function unirse(id) {
             const sub = prompt("¿Submarino?");
             if(!sub) return;
-            await fetch(URL_API, { method: 'POST', body: JSON.stringify({action: "unirseMision", idMision: id, email: usuarioActual.email, submarino: sub })});
+            await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({action: "unirseMision", idMision: id, email: usuarioActual.email, submarino: sub })});
             refrescarDatos();
         }
 
+        // Ejecutar todo cuando la ventana cargue
         window.onload = function() {
-            configurarLogin();
+            inicializarGoogle();
             refrescarDatos();
         };
     </script>
