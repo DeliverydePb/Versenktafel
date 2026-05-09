@@ -13,12 +13,14 @@
         .btn:hover { background: #00ff00; color: #000; }
         .btn-cancelar { color: #ff3333; border-color: #ff3333; }
         .btn-cancelar:hover { background: #ff3333; color: #fff; }
+        .btn:disabled { color: #444; border-color: #444; cursor: not-allowed; background: #111; }
         table { width: 100%; margin-top: 10px; border-collapse: collapse; }
         th { background: #2b2f33; color: #00ff00; }
         th, td { padding: 12px; border: 1px solid #495057; text-align: left; }
         .oculto { display: none; }
         .alerta { color: #ff3333; font-weight: bold; margin: 10px 0; border-left: 4px solid #ff3333; padding-left: 10px; }
         select { background: #1a1d20; color: #00ff00; border: 1px solid #00ff00; padding: 5px; font-family: inherit; }
+        .cargando { color: #ffc107; font-style: italic; }
     </style>
 </head>
 <body>
@@ -35,7 +37,7 @@
         <h2>📊 REGISTRO DE TONELAJE</h2>
         <table id="tabla-ranking">
             <thead><tr><th>CAPITÁN</th><th>TONELAJE TOTAL</th></tr></thead>
-            <tbody><tr><td colspan="2">Conectando...</td></tr></tbody>
+            <tbody><tr><td colspan="2">Conectando con el Almirantazgo...</td></tr></tbody>
         </table>
     </div>
 
@@ -57,7 +59,7 @@
             </div>
             
             <div id="area-gestion-activa" class="oculto">
-                <button class="btn btn-cancelar" onclick="cancelarMision()">❌ Cancelar Patrulla</button>
+                <button id="btn-cancelar" class="btn btn-cancelar" onclick="cancelarMision()">❌ Cancelar Patrulla</button>
                 <div class="panel" style="border-color: #00ff00; margin-top: 20px;">
                     <h3>📥 REPORTAR RESULTADOS</h3>
                     <input type="file" id="foto-ocr" accept="image/*">
@@ -119,37 +121,78 @@
                             <option value="U-564">U-564</option>
                             <option value="U-307">U-307</option>
                         </select>
-                        <button class="btn" onclick="unirse('${m.id}')">⚓ UNIRSE</button>
+                        <button id="btn-unirse-${m.id}" class="btn" onclick="unirse('${m.id}')">⚓ UNIRSE</button>
                     </div>
                 `).join('') || "<p>No hay patrullas activas.</p>";
             }
         }
 
         async function crearMision() {
+            const btn = document.getElementById('btn-crear');
             const sub = document.getElementById('sub-creador').value;
-            const res = await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({
-                action: "crearMision", 
-                email: usuarioActual.email, 
-                nombreCreador: usuarioActual.name,
-                submarino: sub
-            })});
             
-            if(res.ok) {
-                descargarArchivoMision(sub);
-                refrescarDatos();
+            // Feedback visual inmediato
+            btn.disabled = true;
+            btn.innerText = "Transmitiendo a Enigma...";
+
+            try {
+                const res = await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({
+                    action: "crearMision", 
+                    email: usuarioActual.email, 
+                    nombreCreador: usuarioActual.name,
+                    submarino: sub
+                })});
+                
+                if(res.ok) {
+                    descargarArchivoMision(sub);
+                    await refrescarDatos();
+                }
+            } catch (e) {
+                alert("Error de conexión con el BdU");
+                btn.disabled = false;
+                btn.innerText = "🚀 Iniciar Nueva Patrulla";
             }
         }
 
         async function unirse(id) {
+            const btn = document.getElementById(`btn-unirse-${id}`);
             const sub = document.getElementById(`sub-unirse-${id}`).value;
-            await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({action: "unirseMision", idMision: id, email: usuarioActual.email, submarino: sub })});
-            refrescarDatos();
+            
+            btn.disabled = true;
+            btn.innerText = "Uniéndose...";
+
+            try {
+                await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({
+                    action: "unirseMision", 
+                    idMision: id, 
+                    email: usuarioActual.email, 
+                    submarino: sub 
+                })});
+                await refrescarDatos();
+            } catch (e) {
+                alert("Error al unirse");
+                btn.disabled = false;
+                btn.innerText = "⚓ UNIRSE";
+            }
         }
 
         async function cancelarMision() {
-            if(!confirm("¿Seguro que deseas cancelar la patrulla? Se borrará de la pizarra.")) return;
-            await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({action: "cancelarMision", email: usuarioActual.email })});
-            refrescarDatos();
+            if(!confirm("¿Seguro que deseas cancelar la patrulla?")) return;
+            
+            const btn = document.getElementById('btn-cancelar');
+            btn.disabled = true;
+            btn.innerText = "Cancelando...";
+
+            try {
+                await fetch(CONFIG.URL_API, { method: 'POST', body: JSON.stringify({
+                    action: "cancelarMision", 
+                    email: usuarioActual.email 
+                })});
+                await refrescarDatos();
+            } catch (e) {
+                alert("Error al cancelar");
+                btn.disabled = false;
+            }
         }
 
         function descargarArchivoMision(submarino) {
