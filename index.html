@@ -2,96 +2,132 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Wolfpack Lobby - Submarinos</title>
-    <!-- Cargamos Google para el Login y Tesseract para la imagen -->
+    <title>Kriegsmarine Command</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-        body { font-family: 'Courier New', Courier, monospace; background: #1a1a1a; color: #00ff00; padding: 20px; }
-        .seccion { border: 1px solid #00ff00; padding: 20px; margin-bottom: 20px; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #00ff00; padding: 8px; text-align: left; }
-        button { background: #00ff00; color: black; border: none; padding: 10px; cursor: pointer; font-weight: bold; }
+        body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; }
+        h1, h2 { color: #f8f9fa; border-bottom: 1px solid #495057; }
+        .panel { border: 1px solid #495057; padding: 15px; margin-bottom: 15px; background: #1a1d20; }
+        .btn { background: #343a40; color: #00ff00; border: 1px solid #00ff00; padding: 10px; cursor: pointer; text-transform: uppercase; }
+        .btn:disabled { color: #555; border-color: #555; cursor: not-allowed; }
+        table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid #495057; text-align: left; }
         .oculto { display: none; }
+        .alerta { color: #ffc107; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>⚓ SISTEMA DE COMANDO DE SUBMARINOS ⚓</h1>
+    <h1>⚓ CUARTEL GENERAL DE SUBMARINOS (BdU) ⚓</h1>
 
-    <!-- 1. REGISTRO / LOGIN -->
-    <div id="seccion-login" class="seccion">
-        <h2>IDENTIFICACIÓN</h2>
-        <div id="g_id_onload"
-             data-client_id="653070334239-trc9c573n3e9ji9iu6j4b23ueh7bok9l.apps.googleusercontent.com"
-             data-callback="handleCredentialResponse">
-        </div>
+    <!-- SECCIÓN 1: ACCESO -->
+    <div id="login-area" class="panel">
+        <div id="g_id_onload" data-client_id="TU_CLIENT_ID_AQUI" data-callback="onSignIn"></div>
         <div class="g_id_signin" data-type="standard"></div>
+        <p id="user-info"></p>
     </div>
 
-    <!-- 2. SALÓN DE LA FAMA (Siempre visible) -->
-    <div id="seccion-ranking" class="seccion">
-        <h2>SALÓN DE LA FAMA</h2>
+    <!-- SECCIÓN 2: REGISTRO DE TONELAJE (Siempre visible) -->
+    <div class="panel">
+        <h2>📊 REGISTRO DE TONELAJE</h2>
         <table id="tabla-ranking">
-            <thead><tr><th>Capitán</th><th>Puntos de Prestigio</th></tr></thead>
-            <tbody><!-- Se llena con el script --></tbody>
+            <thead><tr><th>CAPITÁN</th><th>TONELAJE TOTAL</th></tr></thead>
+            <tbody></tbody>
         </table>
     </div>
 
-    <!-- 3. SUBIR RESULTADOS (Solo tras login) -->
-    <div id="seccion-partida" class="seccion oculto">
-        <h2>REGISTRAR RESULTADOS DE MISIÓN</h2>
-        <p>Sube la captura de pantalla de la partida:</p>
-        <input type="file" id="foto-resultado" accept="image/*">
-        <button onclick="procesarImagen()">Analizar y Enviar</button>
-        <p id="estado-ocr"></p>
+    <!-- SECCIÓN 3: MISIONES (Solo tras login) -->
+    <div id="misiones-area" class="panel oculto">
+        <h2>🗺️ MISIONES EN CURSO</h2>
+        <div id="estado-usuario" class="alerta"></div>
+        <div id="lista-misiones"></div>
+        <br>
+        <button id="btn-crear" class="btn" onclick="crearMision()">Iniciar Nueva Patrulla</button>
+        
+        <div id="area-resultados" class="oculto">
+            <hr>
+            <h3>Cargar Resultados de Patrulla</h3>
+            <input type="file" id="foto-ocr">
+            <button class="btn" onclick="alert('Funcionalidad en desarrollo')">Finalizar Misión</button>
+        </div>
     </div>
 
     <script>
-        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbyKyUJ4WTUVaIs_O8gx8EtO8pn25MqcdH8omrFzfoxSMZakBOWcoDEbJiAL3FAtUL31Aw/exec";
+        const URL_API = "TU_URL_DE_APPS_SCRIPT_AQUI";
+        let usuarioActual = null;
+        let misionesActivas = [];
 
-        // Función para cargar el Ranking al abrir la página
-        async function cargarRanking() {
-            const res = await fetch(URL_APPS_SCRIPT);
-            const datos = await res.json();
-            const tabla = document.querySelector("#tabla-ranking tbody");
-            tabla.innerHTML = datos.map(f => `<tr><td>${f.nombre}</td><td>${f.puntos}</td></tr>`).join('');
+        async function refrescarDatos() {
+            const r = await fetch(URL_API);
+            const data = await r.json();
+            
+            // Dibujar Ranking
+            document.querySelector("#tabla-ranking tbody").innerHTML = data.ranking.map(u => `<tr><td>${u.n}</td><td>${u.p} TN</td></tr>`).join('');
+            
+            misionesActivas = data.misiones;
+            actualizarInterfazMisiones();
         }
 
-        // Manejar el Login de Google
-        function handleCredentialResponse(response) {
+        function onSignIn(response) {
             const payload = JSON.parse(atob(response.credential.split('.')[1]));
-            console.log("Bienvenido: " + payload.name);
+            usuarioActual = payload;
+            document.getElementById('user-info').innerText = "Capitán: " + payload.name;
+            document.getElementById('misiones-area').classList.remove('oculto');
+            document.getElementById('login-area').classList.add('oculto');
             
-            // Mostrar sección de carga de resultados
-            document.getElementById('seccion-partida').classList.remove('oculto');
-            
-            // Avisar a nuestro Google Sheet que alguien entró
-            fetch(URL_APPS_SCRIPT, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: "login",
-                    email: payload.email,
-                    nombre: payload.name
-                })
-            });
+            fetch(URL_API, { method: 'POST', body: JSON.stringify({action:"login", email:payload.email, nombre:payload.name}) });
+            refrescarDatos();
         }
 
-        // Procesar la imagen con Tesseract.js (OCR)
-        async function procesarImagen() {
-            const file = document.getElementById('foto-resultado').files[0];
-            if (!file) return alert("Sube una foto primero");
+        function actualizarInterfazMisiones() {
+            if (!usuarioActual) return;
 
-            document.getElementById('estado-ocr').innerText = "Analizando imagen... (esto puede tardar)";
-            
-            const result = await Tesseract.recognize(file, 'eng');
-            console.log(result.data.text);
-            
-            alert("Lectura completada. Mira la consola para los datos (F12).");
-            // Aquí iría la lógica para enviar esos datos al Sheet como vimos antes
+            const lista = document.getElementById('lista-misiones');
+            const miMision = misionesActivas.find(m => m.creadorEmail === usuarioActual.email);
+            const btnCrear = document.getElementById('btn-crear');
+            const areaRes = document.getElementById('area-resultados');
+
+            if (miMision) {
+                btnCrear.disabled = true;
+                areaRes.classList.remove('oculto');
+                document.getElementById('estado-usuario').innerText = "TIENES UNA MISIÓN ACTIVA BAJO TU MANDO.";
+                lista.innerHTML = "";
+            } else {
+                btnCrear.disabled = false;
+                areaRes.classList.add('oculto');
+                document.getElementById('estado-usuario').innerText = "PATRULLAS DISPONIBLES PARA UNIRSE:";
+                lista.innerHTML = misionesActivas.map(m => `
+                    <div style="border:1px solid #444; padding:10px; margin:5px;">
+                        Comandante: ${m.creadorNombre} 
+                        <button class="btn" onclick="unirse('${m.id}')">Unirse</button>
+                    </div>
+                `).join('') || "<p>No hay patrullas activas en este momento.</p>";
+            }
         }
 
-        window.onload = cargarRanking;
+        async function crearMision() {
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify({
+                action: "crearMision", 
+                email: usuarioActual.email, 
+                nombreCreador: usuarioActual.name 
+            })});
+            refrescarDatos();
+        }
+
+        async function unirse(id) {
+            const sub = prompt("¿En qué submarino participarás? (Ej: U-96)");
+            if(!sub) return;
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify({
+                action: "unirseMision", 
+                idMision: id, 
+                email: usuarioActual.email, 
+                submarino: sub 
+            })});
+            alert("Te has unido a la misión. Espera a que el comandante suba los resultados.");
+            refrescarDatos();
+        }
+
+        window.onload = refrescarDatos;
     </script>
 </body>
 </html>
