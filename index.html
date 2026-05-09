@@ -2,26 +2,30 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>BdU - Cuartel General</title>
+    <title>BdU - Versenktafel</title>
     <script src="config.js"></script>
     <style>
         body { font-family: 'Courier New', monospace; background: #0c0d0d; color: #adb5bd; padding: 20px; }
         .panel { border: 1px solid #444; padding: 15px; background: #1a1d20; margin-bottom: 20px; box-shadow: inset 0 0 10px #000; }
-        h2 { color: #00ff00; border-bottom: 1px solid #00ff00; text-shadow: 0 0 5px #00ff00; }
+        h1, h2 { color: #00ff00; border-bottom: 1px solid #00ff00; text-shadow: 0 0 5px #00ff00; }
         input { background: #000; color: #00ff00; border: 1px solid #444; padding: 8px; margin: 5px 0; width: 250px; display: block; }
         .btn { background: #1a1d20; color: #00ff00; border: 1px solid #00ff00; padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
         .btn:hover { background: #00ff00; color: #000; }
         .oculto { display: none; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #444; padding: 8px; text-align: left; }
+        th { background: #2b2f33; color: #00ff00; }
+        th, td { border: 1px solid #444; padding: 12px; text-align: left; }
         .link { color: #00ff00; text-decoration: underline; cursor: pointer; font-size: 0.8em; }
+        
+        /* Estilo específico para el ranking global */
+        #global-ranking { border-top: 2px solid #00ff00; margin-top: 50px; }
     </style>
 </head>
 <body>
 
     <h1>⚓ BdU - VERSENKTAFEL ⚓</h1>
 
-    <!-- FORMULARIO DE ACCESO -->
+    <!-- 1. AREA DE AUTENTICACIÓN (LOGIN/REGISTRO) -->
     <div id="auth-area" class="panel">
         <div id="login-form">
             <h2>ACCESO COMANDANTE</h2>
@@ -41,27 +45,30 @@
         </div>
     </div>
 
-    <!-- PANEL PRINCIPAL (Solo se ve tras loguearse) -->
+    <!-- 2. AREA PRIVADA (SOLO TRAS LOGIN) -->
     <div id="main-area" class="oculto">
         <div class="panel">
             <h2 id="bienvenida"></h2>
-            <button class="btn" style="border-color:red; color:red" onclick="location.reload()">Cerrar Sesión</button>
-        </div>
-
-        <div class="panel">
-            <h2>📊 RANKING DE LA FLOTILLA</h2>
-            <table id="tabla-ranking">
-                <thead><tr><th>CAPITÁN</th><th>TONELAJE</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <div class="panel">
-            <h2>🗺️ PATRULLAS ACTIVAS</h2>
-            <div id="lista-misiones"></div>
-            <hr>
+            <div id="lista-misiones" style="margin-bottom: 15px;"></div>
             <button class="btn" onclick="crearMision()">🚀 Iniciar Nueva Patrulla</button>
+            <button class="btn" style="border-color:red; color:red; margin-left: 10px;" onclick="location.reload()">Cerrar Sesión</button>
         </div>
+    </div>
+
+    <!-- 3. RANKING SIEMPRE VISIBLE (ABAJO) -->
+    <div id="global-ranking" class="panel">
+        <h2>📊 REGISTRO GLOBAL DE TONELAJE (RANKING)</h2>
+        <table id="tabla-ranking">
+            <thead>
+                <tr>
+                    <th>CAPITÁN</th>
+                    <th>TONELAJE TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="2">Cargando datos del Almirantazgo...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
@@ -72,12 +79,18 @@
             document.getElementById('registro-form').classList.toggle('oculto', showLogin);
         }
 
+        // Función base para hablar con el servidor
         async function api(params) {
-            const resp = await fetch(CONFIG.URL_API, {
-                method: 'POST',
-                body: JSON.stringify(params)
-            });
-            return await resp.json();
+            try {
+                const resp = await fetch(CONFIG.URL_API, {
+                    method: 'POST',
+                    body: JSON.stringify(params)
+                });
+                return await resp.json();
+            } catch (e) {
+                console.error("Error de conexión:", e);
+                return { status: "error", msg: "No se pudo conectar con el servidor." };
+            }
         }
 
         async function registrar() {
@@ -115,31 +128,33 @@
         }
 
         async function refrescar() {
+            // Obtenemos datos sin acción específica para traer ranking y misiones
             const data = await api({action: "get"});
             
-            // Dibujar Ranking
-            document.querySelector("#tabla-ranking tbody").innerHTML = data.ranking.map(u => 
-                `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`
-            ).join('');
+            if (data.ranking) {
+                document.querySelector("#tabla-ranking tbody").innerHTML = data.ranking.map(u => 
+                    `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`
+                ).join('') || "<tr><td colspan='2'>Sin registros aún.</td></tr>";
+            }
 
-            // Dibujar Misiones
-            document.getElementById('lista-misiones').innerHTML = data.misiones.map(m => 
-                `<div class="panel">Misión de: ${m.n} <button class="btn" onclick="alert('Funcionalidad de unirse en camino')">Unirse</button></div>`
-            ).join('') || "No hay patrullas activas.";
+            if (data.misiones) {
+                document.getElementById('lista-misiones').innerHTML = data.misiones.map(m => 
+                    `<div class="panel" style="border-color: #333;">Misión activa de: <strong>${m.n}</strong></div>`
+                ).join('') || "<p>No hay patrullas en curso actualmente.</p>";
+            }
         }
 
         async function crearMision() {
-            await api({action: "crearMision", email: usuario.email, nombre: usuario.nombre});
-            alert("Misión iniciada. ¡Buena caza!");
-            refrescar();
+            const res = await api({action: "crearMision", email: usuario.email, nombre: usuario.nombre});
+            if(res.status === "ok") {
+                alert("Patrulla iniciada. ¡Buena caza!");
+                refrescar();
+            }
         }
 
-        // Carga inicial de ranking (público)
-        window.onload = async () => {
-            const data = await api({action: "get"});
-            document.querySelector("#tabla-ranking tbody").innerHTML = data.ranking.map(u => 
-                `<tr><td>${u.n}</td><td>${u.p.toLocaleString()} TN</td></tr>`
-            ).join('');
+        // Al cargar la página, llenamos el ranking público inmediatamente
+        window.onload = () => {
+            refrescar();
         };
     </script>
 </body>
