@@ -3,151 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Codificador de Radio WPC - Naval Sim</title>
+    <title>Registro de Tonelaje - Campaña Submarina</title>
+
     <style>
-        body { font-family: 'Courier New', Courier, monospace; background-color: #1a1a1a; color: #00ff00; padding: 20px; }
-        .container { max-width: 900px; margin: auto; border: 1px solid #00ff00; padding: 20px; box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
-        h1, h2 { text-align: center; color: #00ff00; text-transform: uppercase; border-bottom: 1px solid #00ff00; padding-bottom: 10px; }
-        section { margin-bottom: 30px; padding: 15px; border: 1px dotted #444; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        select, input, button { background: #000; color: #00ff00; border: 1px solid #00ff00; padding: 8px; width: 100%; box-sizing: border-box; }
-        button { cursor: pointer; font-weight: bold; margin-top: 10px; }
-        button:hover { background: #00ff00; color: #000; }
-        .result-box { background: #080808; border-left: 5px solid #00ff00; padding: 15px; margin-top: 10px; min-height: 40px; word-break: break-all; }
-        label { font-size: 0.8em; display: block; margin-bottom: 5px; color: #888; }
+        /* =========================================================
+           SECCIÓN DE ESTILOS (CSS)
+           Aquí definimos colores, espacios y posiciones.
+           ========================================================= */
+        
+        /* Estilos generales para toda la página */
+        body {
+            font-family: Arial, sans-serif; /* Tipo de letra limpio y legible */
+            background-color: #f4f4f9; /* Un color de fondo gris muy claro */
+            margin: 0;
+            /* Agregamos un margen inferior grande para que el contenido 
+               no quede tapado por el pie de página fijo */
+            padding-bottom: 250px; 
+        }
+
+        /* Estilos para el encabezado principal */
+        header {
+            background-color: #1a252c; /* Azul marino oscuro, temática naval */
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Estilos para los contenedores de las secciones (Login y Dashboard) */
+        .contenedor {
+            max-width: 800px; /* Ancho máximo para que no se estire demasiado en PC */
+            margin: 20px auto; /* Centra el contenedor en la pantalla */
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px; /* Bordes redondeados */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Sombra suave para dar relieve */
+        }
+
+        /* Estilo para los botones */
+        button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer; /* Cambia la flecha por una manito al pasar por encima */
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #34495e; /* Un tono más claro al pasar el mouse */
+        }
+
+        /* =========================================================
+           SECCIÓN 1: ESTILOS DEL FOOTER FIJO (Tabla de Tonelaje)
+           ========================================================= */
+        #tonnage-footer {
+            position: fixed; /* Esto ancla la sección a la pantalla */
+            bottom: 0; /* Lo pega exactamente al borde inferior */
+            left: 0;
+            width: 100%; /* Ocupa todo el ancho disponible */
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5); /* Sombra hacia arriba */
+            /* El z-index asegura que el footer siempre esté por encima del resto del contenido */
+            z-index: 1000; 
+        }
+
+        /* Estilos para la tabla dentro del footer */
+        table {
+            width: 80%;
+            margin: 0 auto; /* Centra la tabla dentro del footer */
+            border-collapse: collapse; /* Une los bordes de las celdas */
+            background-color: white;
+            color: black;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #bdc3c7; /* Color de fondo para los encabezados de la tabla */
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Protocolo de Radio WPC</h1>
+    <header>
+        <h1>Campaña Naval: Registro de Tonelaje</h1>
+    </header>
 
-    <section id="encoder">
-        <h2>Codificar Mensaje</h2>
-        <div class="grid">
-            <div>
-                <label>1. EMISOR</label>
-                <select id="e-emisor">
-                    <option value="B">BDU (B)</option>
-                    <option value="6">U96 (6)</option>
-                    <option value="2">U552 (2)</option>
-                    <option value="4">U564 (4)</option>
-                    <option value="7">U307 (7)</option>
-                </select>
-            </div>
-            <div>
-                <label>2. TIPO</label>
-                <select id="e-tipo">
-                    <option value="O">Orden (O)</option>
-                    <option value="1">Pregunta (1)</option>
-                    <option value="R">Respuesta (R)</option>
-                    <option value="S">Solicitud (S)</option>
-                </select>
-            </div>
-            <div>
-                <label>3. RECEPTOR</label>
-                <select id="e-receptor">
-                    <option value="A">Todos (A)</option>
-                    <option value="B">BDU (B)</option>
-                    <option value="6">U96 (6)</option>
-                    <option value="2">U552 (2)</option>
-                    <option value="4">U564 (4)</option>
-                    <option value="7">U307 (7)</option>
-                </select>
-            </div>
-            <div>
-                <label>4. OBJETO</label>
-                <select id="e-objeto">
-                    <option value="SU">Submarino (SU)</option>
-                    <option value="CON">Convoy (CON)</option>
-                    <option value="BG">Buque Guerra (BG)</option>
-                    <option value="ME">Mercante (ME)</option>
-                </select>
-            </div>
-        </div>
-        <div class="grid">
-            <div>
-                <label>5. PARÁMETRO</label>
-                <select id="e-param">
-                    <option value="POS">Posición (POS)</option>
-                    <option value="C">Rumbo (C)</option>
-                    <option value="V">Velocidad (V)</option>
-                    <option value="PSD">Sigilo (PSD)</option>
-                </select>
-            </div>
-            <div>
-                <label>Valor / Unidades</label>
-                <input type="text" id="e-valor" placeholder="Ej: 82G o 15KN">
-            </div>
-            <div>
-                <label>6. ESTADO</label>
-                <select id="e-estado">
-                    <option value="OK">Confirmación (OK)</option>
-                    <option value="SOS">Asistencia (SOS)</option>
-                    <option value="EME">Emergencia (EME)</option>
-                    <option value="FIN">Fin Misión (FIN)</option>
-                </select>
-            </div>
-        </div>
-        <button onclick="codificar()">GENERAR CÓDIGO</button>
-        <div class="result-box" id="res-codigo">MENSAJE CODIFICADO APARECERÁ AQUÍ</div>
-    </section>
-
-    <section id="decoder">
-        <h2>Decodificar Mensaje</h2>
-        <p style="font-size: 0.8em; color: #888;">Ingrese el código separado por espacios (Ej: 7 R B SU POS E)</p>
-        <input type="text" id="input-decode" placeholder="B O A CON POS 82G E">
-        <button onclick="decodificar()">TRADUCIR A LENGUAJE NATURAL</button>
-        <div class="result-box" id="res-natural">TRADUCCIÓN APARECERÁ AQUÍ</div>
-    </section>
-</div>
-
-<script>
-    // Diccionarios basados en el documento WPC
-    const diccionario = {
-        emisores: { "B": "BDU", "6": "U96", "2": "U552", "4": "U564", "7": "U307" },
-        tipos: { "O": "Orden", "1": "Pregunta", "R": "Respuesta", "S": "Solicitud" },
-        receptores: { "B": "BDU", "6": "U96", "2": "U552", "4": "U564", "7": "U307", "A": "Todos los submarinos" },
-        objetos: { "SU": "Submarino", "CON": "Convoy", "BG": "Buque de Guerra", "ME": "Buque Mercante", "TOI": "Tiempo de impacto" },
-        params: { "POS": "Posición", "C": "Rumbo", "D": "Distancia", "V": "Velocidad", "PSD": "Permanecer sin ser detectado" },
-        estados: { "OK": "Confirmación", "CNT": "Sin quejas", "NOT": "Denegado", "SOS": "Solicitud asistencia", "EME": "Emergencia", "FIN": "Retirada" },
-        cierre: { "E": "Fin del mensaje" }
-    };
-
-    function codificar() {
-        const msg = [
-            document.getElementById('e-emisor').value,
-            document.getElementById('e-tipo').value,
-            document.getElementById('e-receptor').value,
-            document.getElementById('e-objeto').value,
-            document.getElementById('e-param').value,
-            document.getElementById('e-valor').value.toUpperCase(),
-            document.getElementById('e-estado').value,
-            "E" // Cierre automático
-        ].filter(v => v !== "").join(" ");
+    <section id="login-section" class="contenedor">
+        <h2>Acceso de Capitanes</h2>
+        <p>Identifícate para registrar tu actividad en la partida.</p>
         
-        document.getElementById('res-codigo').innerText = msg;
-    }
+        <label for="username">Usuario:</label>
+        <input type="text" id="username" placeholder="Tu nombre de jugador">
+        <br><br>
+        
+        <label for="pin">PIN / Contraseña:</label>
+        <input type="password" id="pin" placeholder="Tu clave">
+        <br><br>
+        
+        <button id="btn-login">Ingresar al Sistema</button>
+    </section>
 
-    function decodificar() {
-        const raw = document.getElementById('input-decode').value.trim().toUpperCase();
-        const parts = raw.split(" ");
-        let traducido = [];
+    <section id="dashboard-section" class="contenedor">
+        <h2>Panel de Operaciones</h2>
+        <p>Bienvenido. Selecciona tu próxima acción:</p>
 
-        parts.forEach(p => {
-            if (diccionario.emisores[p]) traducido.push(`[Emisor: ${diccionario.emisores[p]}]`);
-            else if (diccionario.tipos[p]) traducido.push(`[Tipo: ${diccionario.tipos[p]}]`);
-            else if (diccionario.receptores[p]) traducido.push(`[Receptor: ${diccionario.receptores[p]}]`);
-            else if (diccionario.objetos[p]) traducido.push(`[Objeto: ${diccionario.objetos[p]}]`);
-            else if (diccionario.params[p]) traducido.push(`[Parámetro: ${diccionario.params[p]}]`);
-            else if (diccionario.estados[p]) traducido.push(`[Estado: ${diccionario.estados[p]}]`);
-            else if (diccionario.cierre[p]) traducido.push(`[CIERRE]`);
-            else traducido.push(`(${p})`); // Valores numéricos o grados
-        });
+        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px;">
+            <h3>Unirse a una Patrulla Activa</h3>
+            <label for="select-patrulla">Selecciona la patrulla:</label>
+            <select id="select-patrulla">
+                <option value="p1">Patrulla Alpha (Creada por: Cmdt. Perez)</option>
+                <option value="p2">Patrulla Bravo (Creada por: Cmdt. Gomez)</option>
+            </select>
+            <br><br>
+            <label for="input-submarino">Submarino asignado (Ej: U-552):</label>
+            <input type="text" id="input-submarino" placeholder="Número de U-Boat">
+            <br><br>
+            <button id="btn-unirse">Registrar Asignación</button>
+        </div>
 
-        document.getElementById('res-natural').innerText = traducido.join(" → ");
-    }
-</script>
+        <div style="border: 1px solid #ccc; padding: 15px;">
+            <h3>Crear Nueva Patrulla</h3>
+            <p>Al crear una patrulla, serás el responsable de cargar los resultados finales o de cancelarla.</p>
+            <label for="nuevo-submarino">Tu submarino asignado:</label>
+            <input type="text" id="nuevo-submarino" placeholder="Número de U-Boat">
+            <button id="btn-crear">Crear e Iniciar Patrulla</button>
+            
+            <hr> <h4>Carga de Resultados (Solo Creador)</h4>
+            <p>Ingresa el tonelaje hundido por cada submarino. Si fue destruido, marca la casilla correspondiente.</p>
+            
+            <div>
+                <span><strong>U-552</strong> (Jugador1): </span>
+                <input type="number" placeholder="Toneladas hundidas">
+                <label><input type="checkbox"> Submarino Destruido</label>
+            </div>
+            <br>
+            <button id="btn-resultados" style="background-color: #27ae60;">Enviar Reporte Final</button>
+        </div>
+    </section>
+
+    <footer id="tonnage-footer">
+        <h3>Clasificación Global de Tonelaje</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Posición</th>
+                    <th>Comandante</th>
+                    <th>Tonelaje Total Hundido</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-datos">
+                <tr>
+                    <td>1</td>
+                    <td>Jugador_Maestro</td>
+                    <td>154,300 tons</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Capitan_Novato</td>
+                    <td>32,100 tons</td>
+                </tr>
+            </tbody>
+        </table>
+    </footer>
 
 </body>
 </html>
