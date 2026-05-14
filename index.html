@@ -2,67 +2,187 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Registro de Tonelaje</title>
-    
-    <link rel="stylesheet" href="estilos.css">
+    <title>Codificador de Radio WPC</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; color: #2c3e50; }
+        .section { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+        select, button { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        button { cursor: pointer; background-color: #2c3e50; color: white; border: none; }
+        button:hover { background-color: #34495e; }
+        .btn-add { background-color: #27ae60; font-weight: bold; }
+        .output-box { background: #eee; padding: 15px; border-left: 5px solid #2c3e50; font-family: monospace; min-height: 20px; margin-top: 10px; white-space: pre-wrap; }
+        .label { font-size: 0.8em; color: #666; margin-bottom: 2px; }
+        .group { display: flex; flex-direction: column; }
+    </style>
 </head>
 <body>
 
-    <header>
-        <h1>Sistema de Comando Naval</h1>
-        <p>Identificación obligatoria para todo el personal</p>
-    </header>
+<div class="container">
+    <h1>Codificador de Mensajes WPC</h1>
 
-    <main class="contenedor">
-        <section id="login-section">
-            <h2>Acceso de Capitanes</h2>
-            
-            <div class="formulario">
-                <label for="username">Nombre de Usuario:</label>
-                <input type="text" id="username" placeholder="Ej: Comandante Prien">
-                
-                <br><br> <label for="pin">PIN de Seguridad:</label>
-                <input type="password" id="pin" placeholder="Tu clave secreta">
-                
-                <br><br>
-                
-                <button type="button" id="btn-login">Ingresar a Operaciones</button>
+    <div class="section">
+        <h2>Codificar Mensaje (Abreviaturas)</h2>
+        <div id="codificador-ui">
+            <div class="row">
+                <div class="group">
+                    <span class="label">Emisor</span>
+                    <select id="c-emisor"></select>
+                </div>
+                <div class="group">
+                    <span class="label">Tipo</span>
+                    <select id="c-tipo"></select>
+                </div>
+                <div class="group">
+                    <span class="label">Receptor</span>
+                    <select id="c-receptor"></select>
+                </div>
             </div>
-            
-            <p style="font-size: 0.8em; color: #666; margin-top: 20px;">
-                * Si no tienes un usuario, contacta al administrador de la campaña.
-            </p>
-        </section>
-    </main>
 
-    <footer id="tonnage-footer">
-        <h3>Resumen de Clasificación Global</h3>
-        
-        <table id="tabla-tonelaje">
-            <thead>
-                <tr>
-                    <th>Rango</th>
-                    <th>Comandante</th>
-                    <th>Tonelaje Acumulado</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1°</td>
-                    <td>Ejemplo_Capitan_1</td>
-                    <td>120,500 t</td>
-                </tr>
-                <tr>
-                    <td>2°</td>
-                    <td>Ejemplo_Capitan_2</td>
-                    <td>85,200 t</td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <p><a href="clasificacion.html" style="color: #4db8ff;">Ver clasificación detallada</a></p>
-    </footer>
+            <div id="dynamic-segments">
+                </div>
+
+            <div class="row">
+                <button class="btn-add" onclick="addSegment()">+ Agregar Segmento (Obj/Par/Est)</button>
+            </div>
+
+            <div class="row">
+                <div class="group">
+                    <span class="label">Cierre</span>
+                    <select id="c-cierre" disabled><option value="E">E (Cierre)</option></select>
+                </div>
+            </div>
+        </div>
+        <h3>Mensaje Codificado:</h3>
+        <div id="output-codificado" class="output-box"></div>
+    </div>
+
+    <hr>
+
+    <div class="section">
+        <h2>Decodificar Mensaje (Traducción)</h2>
+        <p style="font-size: 0.9em;">Selecciona las abreviaturas recibidas para ver el significado:</p>
+        <div id="decodificador-ui">
+            </div>
+        <h3>Mensaje Traducido:</h3>
+        <div id="output-traducido" class="output-box"></div>
+    </div>
+</div>
+
+<script>
+// --- DATOS DEL DOCUMENTO ---
+const data = {
+    emisores: { "B": "BDU", "6": "U96", "2": "U552", "4": "U564", "7": "U307" },
+    tipos: { "O": "Orden", "1": "Solicitud/Pregunta", "R": "Respuesta", "S": "Solicitud" },
+    receptores: { "B": "BDU", "6": "U96", "2": "U552", "4": "U564", "7": "U307", "A": "Todos los submarinos" },
+    objetos: { "SU": "Submarino", "CON": "Convoy", "TOI": "Tiempo de impacto", "BG": "Buque de guerra", "CCF": "Corbeta Flower", "BPB": "Buque Bittern", "TRL": "Destructor Tribal", "ME": "Mercante", "PL": "Pasaje", "HT": "Cisterna Pesado" },
+    parametros: { "POS": "Posición", "C": "Rumbo", "D": "Distancia", "V": "Velocidad", "TIW": "Torpedos en agua", "TOR": "Torpedos restantes", "PSD": "Permanecer sin detectar" },
+    estados: { "OK": "Confirmación", "CNT": "Sin quejas", "NOT": "Denegado", "SOS": "Auxilio Inmediato", "INM": "Inmersión profunda", "EME": "Emergencia", "FIN COM": "Retirada combate", "FIN": "Retirada misión" }
+};
+
+// --- INICIALIZACIÓN ---
+function populateSelect(id, options) {
+    const sel = document.getElementById(id);
+    for (let [val, text] of Object.entries(options)) {
+        let opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = `${val} (${text})`;
+        sel.appendChild(opt);
+    }
+}
+
+// Llenar fijos
+populateSelect('c-emisor', data.emisores);
+populateSelect('c-tipo', data.tipos);
+populateSelect('c-receptor', data.receptores);
+
+let segmentCount = 0;
+
+function addSegment() {
+    const container = document.getElementById('dynamic-segments');
+    const div = document.createElement('div');
+    div.className = 'row';
+    div.id = `seg-${segmentCount}`;
+    
+    div.innerHTML = `
+        <select class="sel-obj"><option value="">-- Objeto --</option></select>
+        <select class="sel-par"><option value="">-- Parámetro --</option></select>
+        <select class="sel-est"><option value="">-- Estado --</option></select>
+        <button onclick="removeSegment(${segmentCount})" style="background:red">x</button>
+    `;
+    
+    container.appendChild(div);
+    
+    // Llenar los nuevos selects
+    const sObj = div.querySelector('.sel-obj');
+    const sPar = div.querySelector('.sel-par');
+    const sEst = div.querySelector('.sel-est');
+    
+    for (let [k,v] of Object.entries(data.objetos)) sObj.innerHTML += `<option value="${k}">${k} (${v})</option>`;
+    for (let [k,v] of Object.entries(data.parametros)) sPar.innerHTML += `<option value="${k}">${k} (${v})</option>`;
+    for (let [k,v] of Object.entries(data.estados)) sEst.innerHTML += `<option value="${k}">${k} (${v})</option>`;
+
+    // Eventos para actualizar salida
+    div.querySelectorAll('select').forEach(s => s.addEventListener('change', updateAll));
+    
+    segmentCount++;
+    updateAll();
+}
+
+function removeSegment(id) {
+    document.getElementById(`seg-${id}`).remove();
+    updateAll();
+}
+
+function updateAll() {
+    // 1. Codificar
+    let msg = [];
+    msg.push(document.getElementById('c-emisor').value);
+    msg.push(document.getElementById('c-tipo').value);
+    msg.push(document.getElementById('c-receptor').value);
+    
+    document.querySelectorAll('#dynamic-segments .row').forEach(row => {
+        const o = row.querySelector('.sel-obj').value;
+        const p = row.querySelector('.sel-par').value;
+        const e = row.querySelector('.sel-est').value;
+        if(o) msg.push(o);
+        if(p) msg.push(p);
+        if(e) msg.push(e);
+    });
+    
+    msg.push("E");
+    const codificado = msg.join(" ");
+    document.getElementById('output-codificado').textContent = codificado;
+
+    // 2. Decodificar (Traducción automática basada en el mensaje armado arriba)
+    let trad = [];
+    msg.forEach((word, index) => {
+        let found = false;
+        // Buscar en todos los diccionarios
+        for (let dict of Object.values(data)) {
+            if (dict[word]) {
+                trad.push(dict[word].toUpperCase());
+                found = true;
+                break;
+            }
+        }
+        if (word === "E") trad.push("FIN DEL MENSAJE");
+        else if (!found) trad.push("[" + word + "]");
+    });
+    
+    document.getElementById('output-traducido').textContent = trad.join(" - ");
+}
+
+// Eventos iniciales
+document.getElementById('c-emisor').addEventListener('change', updateAll);
+document.getElementById('c-tipo').addEventListener('change', updateAll);
+document.getElementById('c-receptor').addEventListener('change', updateAll);
+
+// Iniciar con un segmento vacío y actualizar
+addSegment();
+</script>
 
 </body>
 </html>
