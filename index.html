@@ -3,180 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Codificador de Radio WPC</title>
+    <title>Registro de Comandantes - Login</title>
     <style>
-        body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; color: #333; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1, h2 { color: #2c3e50; border-bottom: 2px solid #eee; pb: 10px; }
-        .section { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        .row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
-        select, input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; background-color: #3498db; color: white; transition: 0.3s; }
-        button:hover { background-color: #2980b9; }
-        button.add-btn { background-color: #27ae60; font-weight: bold; }
-        .result-box { margin-top: 20px; padding: 15px; background: #eef2f3; border-left: 5px solid #3498db; font-family: monospace; font-size: 1.2em; min-height: 1.5em; }
-        .translation-box { color: #555; font-style: italic; margin-top: 5px; }
-        .segment { border-left: 3px solid #27ae60; padding-left: 10px; margin-left: 5px; }
+        body { font-family: monospace; background-color: #1a1a1a; color: #00ff00; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { border: 2px solid #00ff00; padding: 30px; background-color: #111; box-shadow: 0 0 15px rgba(0,255,0,0.3); width: 300px; }
+        h2 { text-align: center; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; background-color: #222; border: 1px solid #00ff00; color: #00ff00; box-sizing: border-box; font-family: monospace; }
+        button { width: 100%; padding: 10px; background-color: #00ff00; color: #111; border: none; font-weight: bold; cursor: pointer; font-family: monospace; }
+        button:hover { background-color: #00cc00; }
+        #mensaje { margin-top: 15px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Codificador / Decodificador WPC</h1>
-
-    <div class="section">
-        <h2>Codificar Mensaje</h2>
-        <div id="codificador-form">
-            <div class="row">
-                <label>Emisor:</label>
-                <select id="c-emisor" onchange="updateCodification()">
-                    <option value="B">BDU (B)</option>
-                    <option value="6">U96 (6)</option>
-                    <option value="2">U552 (2)</option>
-                    <option value="4">U564 (4)</option>
-                    <option value="7">U307 (7)</option>
-                </select>
-
-                <label>Tipo:</label>
-                <select id="c-tipo" onchange="updateCodification()">
-                    <option value="O">Orden (O)</option>
-                    <option value="1">Pregunta (1)</option>
-                    <option value="R">Respuesta (R)</option>
-                    <option value="S">Solicitud (S)</option>
-                </select>
-
-                <label>Receptor:</label>
-                <select id="c-receptor" onchange="updateCodification()">
-                    <option value="B">BDU (B)</option>
-                    <option value="6">U96 (6)</option>
-                    <option value="2">U552 (2)</option>
-                    <option value="4">U564 (4)</option>
-                    <option value="7">U307 (7)</option>
-                    <option value="A">Todos (A)</option>
-                </select>
-            </div>
-
-            <div id="dynamic-segments">
-                </div>
-
-            <div class="row">
-                <button class="add-btn" onclick="addSegment()">+ Agregar Objeto/Estado</button>
-            </div>
-
-            <div class="row">
-                <label>Cierre: <strong>E</strong></label>
-            </div>
+<div class="login-box">
+    <h2>Acceso a la Red</h2>
+    <form id="loginForm">
+        <div class="input-group">
+            <label for="comandante">Comandante:</label>
+            <input type="text" id="comandante" required autocomplete="username">
         </div>
-
-        <div class="result-box" id="codified-output">B O A E</div>
-        <div class="translation-box" id="codified-translation">BDU ordena a todos: Fin.</div>
-    </div>
-
-    <div class="section">
-        <h2>Traducir Mensaje Armado</h2>
-        <p><small>Introduce las abreviaturas separadas por espacios para ver la traducción.</small></p>
-        <input type="text" id="t-input" style="width: 80%;" placeholder="Ej: 7 R B SU P 82G E" oninput="translateRaw()">
-        <div class="result-box" id="translation-output">---</div>
-    </div>
+        <div class="input-group">
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" required autocomplete="current-password">
+        </div>
+        <button type="submit">Autenticar</button>
+    </form>
+    <div id="mensaje"></div>
 </div>
 
-<script>
-    // Diccionarios basados en el documento [cite: 1, 4, 11, 23, 34, 47]
-    const DATA = {
-        emisor: { "B": "BDU", "6": "U96", "2": "U552", "4": "U564", "7": "U307" },
-        tipo: { "O": "Ordena", "1": "Pregunta", "R": "Responde", "S": "Solicita" },
-        receptor: { "B": "a BDU", "6": "a U96", "2": "a U552", "4": "a U564", "7": "a U307", "A": "a todos los submarinos" },
-        objeto: { 
-            "SU": "Submarino", "CON": "Convoy", "TOI": "Tiempo impacto", "BG": "Buque guerra", 
-            "CCF": "Corbeta Flower", "BPB": "Patrulla Bittern", "TRL": "Destructor Tribal",
-            "ME": "Mercante", "PL": "Pasaje", "HT": "Cisterna pesado", "HF": "Carguero pesado",
-            "MT": "Cisterna medio", "MF": "Carguero medio", "LM": "Mercante ligero", "TWR": "Arrastrero"
-        },
-        parametro: { 
-            "POS": "Posición", "C": "Rumbo", "D": "Distancia", "V": "Velocidad", 
-            "TIW": "Torpedos en agua", "TOR": "Torpedos restantes", "IDN": "Identificación", "PSD": "Permanecer sin detectar" 
-        },
-        estado: { 
-            "OK": "Confirmado", "CNT": "Sin quejas", "NOT": "Denegado", "SOS": "Auxilio inmediato", 
-            "INM": "Inmersión profunda", "EME": "Inmersión emergencia", "FIN COM": "Retirada combate", "FIN": "Retirada misión" 
-        }
-    };
-
-    function addSegment() {
-        const container = document.getElementById('dynamic-segments');
-        const div = document.createElement('div');
-        div.className = 'row segment';
-        div.innerHTML = `
-            <select class="s-obj" onchange="updateCodification()">
-                <option value="">(Sin Objeto)</option>
-                ${Object.entries(DATA.objeto).map(([k,v]) => `<option value="${k}">${v} (${k})</option>`).join('')}
-            </select>
-            <select class="s-par" onchange="updateCodification()">
-                <option value="">(Sin Parám.)</option>
-                ${Object.entries(DATA.parametro).map(([k,v]) => `<option value="${k}">${v} (${k})</option>`).join('')}
-            </select>
-            <input type="text" class="s-val" placeholder="Valor (ej: 82G)" oninput="updateCodification()" style="width:80px">
-            <select class="s-est" onchange="updateCodification()">
-                <option value="">(Sin Estado)</option>
-                ${Object.entries(DATA.estado).map(([k,v]) => `<option value="${k}">${v} (${k})</option>`).join('')}
-            </select>
-            <button onclick="this.parentElement.remove(); updateCodification();" style="background:#e74c3c">X</button>
-        `;
-        container.appendChild(div);
-        updateCodification();
-    }
-
-    function updateCodification() {
-        let msg = [];
-        let trans = [];
-
-        const emi = document.getElementById('c-emisor').value;
-        const tip = document.getElementById('c-tipo').value;
-        const rec = document.getElementById('c-receptor').value;
-
-        msg.push(emi, tip, rec);
-        trans.push(DATA.emisor[emi], DATA.tipo[tip], DATA.receptor[rec]);
-
-        document.querySelectorAll('.segment').forEach(seg => {
-            const obj = seg.querySelector('.s-obj').value;
-            const par = seg.querySelector('.s-par').value;
-            const val = seg.querySelector('.s-val').value;
-            const est = seg.querySelector('.s-est').value;
-
-            if(obj) { msg.push(obj); trans.push(DATA.objeto[obj]); }
-            if(par) { msg.push(par); trans.push(DATA.parametro[par]); }
-            if(val) { msg.push(val); trans.push(val); }
-            if(est) { msg.push(est); trans.push(DATA.estado[est]); }
-        });
-
-        msg.push("E");
-        trans.push("Fin.");
-
-        document.getElementById('codified-output').innerText = msg.join(' ');
-        document.getElementById('codified-translation').innerText = trans.join(' ');
-    }
-
-    function translateRaw() {
-        const input = document.getElementById('t-input').value.trim().split(/\s+/);
-        let result = [];
-
-        input.forEach((word, index) => {
-            if (index === 0 && DATA.emisor[word]) result.push(DATA.emisor[word]);
-            else if (index === 1 && DATA.tipo[word]) result.push(DATA.tipo[word]);
-            else if (index === 2 && DATA.receptor[word]) result.push(DATA.receptor[word]);
-            else if (DATA.objeto[word]) result.push(DATA.objeto[word]);
-            else if (DATA.parametro[word]) result.push(DATA.parametro[word]);
-            else if (DATA.estado[word]) result.push(DATA.estado[word]);
-            else if (word === "E") result.push("Fin.");
-            else result.push(word); // Mantiene valores numéricos o unidades
-        });
-
-        document.getElementById('translation-output').innerText = result.join(' ');
-    }
-
-    // Inicializar
-    updateCodification();
-</script>
-
+<script src="config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
