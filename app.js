@@ -10,7 +10,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
     try {
         // Enviamos los datos como parámetros en la URL (GET) de forma simple
-        const url = `${CONFIG.API_URL}?comandante=${encodeURIComponent(comandante)}&password=${encodeURIComponent(password)}`;
+        const url = `${CONFIG.API_URL}?action=login&comandante=${encodeURIComponent(comandante)}&password=${encodeURIComponent(password)}`;
         
         const response = await fetch(url);
         const data = await response.json();
@@ -30,3 +30,42 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         console.error(error);
     }
 });
+// 2. Nueva función para cargar el Tonelaje (Leaderboard)
+async function cargarTonelaje() {
+    const tablaCuerpo = document.getElementById('cuerpoTabla');
+    const tablaHeaders = document.getElementById('headers');
+
+    try {
+        const response = await fetch(`${CONFIG.API_URL}?action=getTonelaje`);
+        const data = await response.json();
+
+        // Limpiar tabla
+        tablaHeaders.innerHTML = "";
+        tablaCuerpo.innerHTML = "";
+
+        if (data.length > 0) {
+            // Crear cabeceras dinámicamente según tu Excel
+            Object.keys(data[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.innerText = key;
+                tablaHeaders.appendChild(th);
+            });
+
+            // Llenar filas
+            data.forEach(fila => {
+                const tr = document.createElement('tr');
+                Object.values(fila).forEach(valor => {
+                    const td = document.createElement('td');
+                    td.innerText = valor;
+                    tr.appendChild(td);
+                });
+                tablaCuerpo.appendChild(tr);
+            });
+        }
+    } catch (error) {
+        tablaCuerpo.innerHTML = "<tr><td colspan='4'>Error al sincronizar con el puerto.</td></tr>";
+    }
+}
+
+// Ejecutar al cargar la página
+window.onload = cargarTonelaje;
