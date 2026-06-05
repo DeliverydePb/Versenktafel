@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Patrullas</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/config.js"></script>
+    <script src="js/scripts.js" defer></script>
+</head>
+<body>
+    <header>
+        <h2>Sala de Mapas y Patrullas</h2>
+        <p>Bienvenido, Comandante: <span id="user-display"></span></p>
+    </header>
+
+    <main>
+        <section id="crear-patrulla-sec">
+            <h3>Iniciar Nueva Patrulla</h3>
+            <label for="select-sub-creador">Selecciona tu U-Boot:</label>
+            <select id="select-sub-creador">
+                <option value="U-96">U-96</option>
+                <option value="U-552">U-552</option>
+                <option value="U-564">U-564</option>
+                <option value="U-307">U-307</option>
+            </select>
+            <button id="btn-crear-patrulla">Zarpar (Crear Patrulla)</button>
+        </section>
+
+        <section id="patrullas-activas-sec">
+            <h3>Patrullas Activas en la Flotilla</h3>
+            <div id="lista-patrullas">
+                </div>
+        </section>
+
+        <section id="mi-patrulla-sec" style="display:none;">
+            <h3>Tu Estado de Patrulla Actual</h3>
+            <div id="detalle-mi-patrulla"></div>
+            <div id="acciones-creador" style="display:none;">
+                <button id="btn-ir-resultados">Terminar Patrulla (Cargar Reporte)</button>
+                <button id="btn-cancelar-patrulla" class="btn-danger">Cancelar Patrulla</button>
+            </div>
+            <p id="txt-espera-invitado" style="display:none;">Esperando que el líder termine la patrulla...</p>
+        </section>
+    </main>
+</body>
+</html>

@@ -2,135 +2,49 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Tonnage Tracker - Login</title>
-    <script src="config.js"></script>
-    
+    <title>U-Boot Flotilla - Login & Clasificación</title>
+    <link rel="stylesheet" href="css/styles.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; }
-        .login-card { background: #2a2a2a; padding: 2rem; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        #user-info { display: none; }
-        .hidden { display: none; }
-    </style>
+    <script src="js/config.js"></script>
+    <script src="js/scripts.js" defer></script>
 </head>
 <body>
+    <header>
+        <h1>Registro de Comandantes - 1939</h1>
+    </header>
 
-    <div class="login-card">
-        <h1>U-Boat Tonnage Tracker</h1>
-        
-        <div id="google-btn-container">
-            <div id="buttonDiv"></div>
-        </div>
+    <main>
+        <section id="auth-section">
+            <div id="login-container">
+                <h3>Ingreso para Comandantes Registrados</h3>
+                <div id="buttonDiv"></div> </div>
+            
+            <div id="register-container" style="display:none;">
+                <h3>Registrar Nuevo Comandante</h3>
+                <input type="text" id="reg-username" placeholder="Nombre de usuario en el juego">
+                <button id="btn-registrar">Registrar e Iniciar Sesión</button>
+            </div>
+        </section>
 
-        <div id="user-info">
-            <h2 id="welcome"></h2>
-            <p id="player-rank">Cargando perfil...</p>
-            <button onclick="logout()">Cerrar Sesión</button>
-        </div>
-    </div>
+        <hr>
 
-    <script>
-
-// Inicialización dinámica usando el archivo config.js
-function initGoogleAuth() {
-    if (!CONFIG.GOOGLE_CLIENT_ID || CONFIG.GOOGLE_CLIENT_ID.includes("TU_CLIENT_ID_AQUI")) {
-        console.error("Falta configurar el GOOGLE_CLIENT_ID in config.js");
-        return;
-    }
-
-    google.accounts.id.initialize({
-        client_id: CONFIG.GOOGLE_CLIENT_ID,
-        callback: handleCredentialResponse
-    });
-
-    google.accounts.id.renderButton(
-        document.getElementById("buttonDiv"),
-        { theme: "outline", size: "large", text: "signin_with" }
-    );
-}
-
-function handleCredentialResponse(response) {
-    const responsePayload = parseJwt(response.credential);
-    
-    // Guardamos localmente la sesión en LocalStorage
-    localStorage.setItem('user_logged', JSON.stringify(responsePayload));
-    
-    showUserUI(responsePayload);
-    // NUEVO: Sincronizamos inmediatamente con Google Sheets
-    syncPlayerWithSheets(responsePayload);
-}
-
-function parseJwt(token) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(window.atob(base64));
-}
-
-function showUserUI(user) {
-    document.getElementById('google-btn-container').classList.add('hidden');
-    const infoDiv = document.getElementById('user-info');
-    infoDiv.style.display = 'block';
-    document.getElementById('welcome').innerText = "Bienvenido, " + user.name;
-}
-
-// NUEVA FUNCIÓN: Envía el perfil del jugador a Google Apps Script
-function syncPlayerWithSheets(user) {
-    const rankElement = document.getElementById('player-rank');
-    rankElement.innerText = "Sincronizando rango con la base de datos...";
-
-    const payload = {
-        action: "login_user",
-        user: {
-            sub: user.sub,
-            name: user.name,
-            email: user.email
-        }
-    };
-
-    // Enviamos como texto plano para evitar que el navegador active pre-controles de CORS estrictos
-    fetch(CONFIG.GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "cors",
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === "success") {
-            rankElement.innerText = "Rango: " + data.user_data.rango;
-        } else {
-            // Si el script nos devuelve un error controlado, saldrá aquí
-            rankElement.innerText = "Error: " + data.message;
-        }
-    })
-    .catch(err => {
-        console.error("Error al conectar con el script:", err);
-        rankElement.innerText = "Error al conectar con el servidor.";
-    });
-}
-
-function logout() {
-    localStorage.removeItem('user_logged');
-    location.reload();
-}
-
-// Control de flujo al cargar la página
-window.onload = function() {
-    if (typeof google !== 'undefined') {
-        initGoogleAuth();
-    } else {
-        setTimeout(initGoogleAuth, 100);
-    }
-    
-    const savedUser = localStorage.getItem('user_logged');
-    if (savedUser) {
-        const userObj = JSON.parse(savedUser);
-        showUserUI(userObj);
-        // Si ya estaba logueado de antes, también actualizamos su rango desde la planilla
-        syncPlayerWithSheets(userObj);
-    }
-}
-
-    </script>
+        <section id="leaderboard-section">
+            <h2>Tabla de Tonelaje de la Flotilla</h2>
+            <table id="tabla-tonelaje">
+                <thead>
+                    <tr>
+                        <th onclick="ordenarTabla(0)">Comandante ↕</th>
+                        <th onclick="ordenarTabla(1)">Patrullas Actuales ↕</th>
+                        <th onclick="ordenarTabla(2)">Tonelaje Carrera ↕</th>
+                        <th onclick="ordenarTabla(3)">Índice Tons/Patrulla ↕</th>
+                        <th onclick="ordenarTabla(4)">Mayor Tonelaje Carrera ↕</th>
+                        <th onclick="ordenarTabla(5)">Máx Patrullas Carrera ↕</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-body">
+                    </tbody>
+            </table>
+        </section>
+    </main>
 </body>
 </html>
