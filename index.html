@@ -31,68 +31,110 @@
     </div>
 
     <script>
-        // Esta función inicializa Google de forma puramente programática
-        function initGoogleAuth() {
-            if (!CONFIG.GOOGLE_CLIENT_ID || CONFIG.GOOGLE_CLIENT_ID.includes("TU_CLIENT_ID_AQUI")) {
-                console.error("Falta configurar el GOOGLE_CLIENT_ID en config.js");
-                return;
-            }
 
-            // Inicializa el cliente de Google Auth pasándole el ID de config.js
-            google.accounts.id.initialize({
-                client_id: CONFIG.GOOGLE_CLIENT_ID,
-                callback: handleCredentialResponse
-            });
+// Inicialización dinámica usando el archivo config.js
+function initGoogleAuth() {
+    if (!CONFIG.GOOGLE_CLIENT_ID || CONFIG.GOOGLE_CLIENT_ID.includes("TU_CLIENT_ID_AQUI")) {
+        console.error("Falta configurar el GOOGLE_CLIENT_ID in config.js");
+        return;
+    }
 
-            // Dibuja el botón dentro del div 'buttonDiv'
-            google.accounts.id.renderButton(
-                document.getElementById("buttonDiv"),
-                { theme: "outline", size: "large", text: "signin_with" } 
-            );
+    google.accounts.id.initialize({
+        client_id: CONFIG.GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse
+    });
+
+    google.accounts.id.renderButton(
+        document.getElementById("buttonDiv"),
+        { theme: "outline", size: "large", text: "signin_with" }
+    );
+}
+
+function handleCredentialResponse(response) {
+    const responsePayload = parseJwt(response.credential);
+    
+    // Guardamos localmente la sesión en LocalStorage
+    localStorage.setItem('user_logged', JSON.stringify(responsePayload));
+    
+    showUserUI(responsePayload);
+    // NUEVO: Sincronizamos inmediatamente con Google Sheets
+    syncPlayerWithSheets(responsePayload);
+}
+
+function parseJwt(token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(window.atob(base64));
+}
+
+function showUserUI(user) {
+    document.getElementById('google-btn-container').classList.add('hidden');
+    const infoDiv = document.getElementById('user-info');
+    infoDiv.style.display = 'block';
+    document.getElementById('welcome').innerText = "Bienvenido, " + user.name;
+}
+
+// NUEVA FUNCIÓN: Envía el perfil del jugador a Google Apps Script
+function syncPlayerWithSheets(user) {
+    const rankElement = document.getElementById('player-rank');
+    rankElement.innerText = "Sincronizando rango con la base de datos...";
+
+    // Estructuramos el paquete de datos
+    const payload = {
+        action: "login_user",
+        user: {
+            sub: user.sub,
+            name: user.name,
+            email: user.email
         }
+    };
 
-        function handleCredentialResponse(response) {
-            const responsePayload = parseJwt(response.credential);
-            
-            // Guardamos localmente la sesión
-            localStorage.setItem('user_logged', JSON.stringify(responsePayload));
-            
-            showUserUI(responsePayload);
+    // Hacemos la petición POST al puente de Google Sheets
+    fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "cors", // Crucial para que GitHub Pages tenga permiso
+        headers: {
+            "Content-Type": "text/plain" // Usamos text/plain para evitar bloqueos CORS estrictos en Apps Script
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            // Mostramos el rango que nos devolvió la planilla (ej: Cadete)
+            rankElement.innerText = "Rango: " + data.user_data.rango;
+        } else {
+            rankElement.innerText = "Error de sincronización: " + data.message;
         }
+    })
+    .catch(err => {
+        console.error("Error al conectar con el script:", err);
+        rankElement.innerText = "Error al conectar con el servidor.";
+    });
+}
 
-        function parseJwt(token) {
-            var base64Url = token.split('.')[1];
-            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            return JSON.parse(window.atob(base64));
-        }
+function logout() {
+    localStorage.removeItem('user_logged');
+    location.reload();
+}
 
-        function showUserUI(user) {
-            document.getElementById('google-btn-container').classList.add('hidden');
-            const infoDiv = document.getElementById('user-info');
-            infoDiv.style.display = 'block';
-            document.getElementById('welcome').innerText = "Bienvenido, " + user.name;
-        }
+// Control de flujo al cargar la página
+window.onload = function() {
+    if (typeof google !== 'undefined') {
+        initGoogleAuth();
+    } else {
+        setTimeout(initGoogleAuth, 100);
+    }
+    
+    const savedUser = localStorage.getItem('user_logged');
+    if (savedUser) {
+        const userObj = JSON.parse(savedUser);
+        showUserUI(userObj);
+        // Si ya estaba logueado de antes, también actualizamos su rango desde la planilla
+        syncPlayerWithSheets(userObj);
+    }
+}
 
-        function logout() {
-            localStorage.removeItem('user_logged');
-            location.reload();
-        }
-
-        // Control estricto de la carga
-        window.onload = function() {
-            // Damos un margen mínimo para asegurar que la librería de Google está lista en memoria
-            if (typeof google !== 'undefined') {
-                initGoogleAuth();
-            } else {
-                // Si tarda un poco en bajar de internet, reintentamos en un instante
-                setTimeout(initGoogleAuth, 100);
-            }
-            
-            const savedUser = localStorage.getItem('user_logged');
-            if (savedUser) {
-                showUserUI(JSON.parse(savedUser));
-            }
-        }
     </script>
 </body>
 </html>
