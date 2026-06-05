@@ -14,17 +14,28 @@
     </header>
 
     <main>
-        <section id="auth-section">
-            <div id="login-container">
-                <h3>Ingreso para Comandantes Registrados</h3>
-                <div id="buttonDiv"></div> </div>
-            
-            <div id="register-container" style="display:none;">
-                <h3>Registrar Nuevo Comandante</h3>
-                <input type="text" id="reg-username" placeholder="Nombre de usuario en el juego">
-                <button id="btn-registrar">Registrar e Iniciar Sesión</button>
-            </div>
-        </section>
+
+<section id="auth-section">
+    <div id="login-container">
+        <h3>Ingreso para Comandantes Registrados</h3>
+        <div id="buttonDiv"></div> <p style="margin-top: 15px; font-size: 12px; color: #aaa;">
+            ¿Es tu primera patrulla? 
+            <button id="btn-mostrar-registro" style="background: none; border: none; color: var(--accent-hover); text-decoration: underline; cursor: pointer; padding: 0; font-family: inherit;">
+                Regístrate aquí
+            </button>
+        </p>
+    </div>
+    
+    <div id="register-container" style="display:none;">
+        <h3>Registrar Nuevo Comandante</h3>
+        <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">
+            Primero debes iniciar sesión con Google para vincular tu cuenta de forma segura.
+        </p>
+        <input type="text" id="reg-username" placeholder="Nombre de usuario en el juego">
+        <button id="btn-registrar">Registrar e Iniciar Sesión</button>
+        <button id="btn-cancelar-registro" class="btn-danger" style="margin-left: 10px;">Volver</button>
+    </div>
+</section>
 
         <hr>
 
