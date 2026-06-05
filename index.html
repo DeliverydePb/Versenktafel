@@ -79,7 +79,6 @@ function syncPlayerWithSheets(user) {
     const rankElement = document.getElementById('player-rank');
     rankElement.innerText = "Sincronizando rango con la base de datos...";
 
-    // Estructuramos el paquete de datos
     const payload = {
         action: "login_user",
         user: {
@@ -89,22 +88,19 @@ function syncPlayerWithSheets(user) {
         }
     };
 
-    // Hacemos la petición POST al puente de Google Sheets
+    // Enviamos como texto plano para evitar que el navegador active pre-controles de CORS estrictos
     fetch(CONFIG.GOOGLE_SCRIPT_URL, {
         method: "POST",
-        mode: "cors", // Crucial para que GitHub Pages tenga permiso
-        headers: {
-            "Content-Type": "text/plain" // Usamos text/plain para evitar bloqueos CORS estrictos en Apps Script
-        },
+        mode: "cors",
         body: JSON.stringify(payload)
     })
     .then(res => res.json())
     .then(data => {
         if (data.status === "success") {
-            // Mostramos el rango que nos devolvió la planilla (ej: Cadete)
             rankElement.innerText = "Rango: " + data.user_data.rango;
         } else {
-            rankElement.innerText = "Error de sincronización: " + data.message;
+            // Si el script nos devuelve un error controlado, saldrá aquí
+            rankElement.innerText = "Error: " + data.message;
         }
     })
     .catch(err => {
