@@ -20,32 +20,41 @@
         <h1>U-Boat Tonnage Tracker</h1>
         
         <div id="google-btn-container">
-            <div id="g_id_onload"></div>
-            <div class="g_id_signin" data-type="standard"></div>
+            <div id="buttonDiv"></div>
         </div>
 
         <div id="user-info">
             <h2 id="welcome"></h2>
-            <p>Accediendo al registro de tonelaje...</p>
+            <p id="player-rank">Cargando perfil...</p>
             <button onclick="logout()">Cerrar Sesión</button>
         </div>
     </div>
 
     <script>
-        // Inicialización dinámica usando el archivo config.js
+        // Esta función inicializa Google de forma puramente programática
         function initGoogleAuth() {
-            const tokenContainer = document.getElementById('g_id_onload');
-            
-            // Inyectamos los atributos desde las constantes separadas
-            tokenContainer.setAttribute('data-client_id', CONFIG.GOOGLE_CLIENT_ID);
-            tokenContainer.setAttribute('data-callback', 'handleCredentialResponse');
-            tokenContainer.setAttribute('data-auto_prompt', 'false');
+            if (!CONFIG.GOOGLE_CLIENT_ID || CONFIG.GOOGLE_CLIENT_ID.includes("TU_CLIENT_ID_AQUI")) {
+                console.error("Falta configurar el GOOGLE_CLIENT_ID en config.js");
+                return;
+            }
+
+            // Inicializa el cliente de Google Auth pasándole el ID de config.js
+            google.accounts.id.initialize({
+                client_id: CONFIG.GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse
+            });
+
+            // Dibuja el botón dentro del div 'buttonDiv'
+            google.accounts.id.renderButton(
+                document.getElementById("buttonDiv"),
+                { theme: "outline", size: "large", text: "signin_with" } 
+            );
         }
 
         function handleCredentialResponse(response) {
             const responsePayload = parseJwt(response.credential);
             
-            // Persistencia de la sesión usando LocalStorage
+            // Guardamos localmente la sesión
             localStorage.setItem('user_logged', JSON.stringify(responsePayload));
             
             showUserUI(responsePayload);
@@ -69,9 +78,15 @@
             location.reload();
         }
 
-        // Control de flujo al cargar la página
+        // Control estricto de la carga
         window.onload = function() {
-            initGoogleAuth();
+            // Damos un margen mínimo para asegurar que la librería de Google está lista en memoria
+            if (typeof google !== 'undefined') {
+                initGoogleAuth();
+            } else {
+                // Si tarda un poco en bajar de internet, reintentamos en un instante
+                setTimeout(initGoogleAuth, 100);
+            }
             
             const savedUser = localStorage.getItem('user_logged');
             if (savedUser) {
