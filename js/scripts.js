@@ -45,7 +45,6 @@ function verificarSesion() {
 // ==========================================
 // 2. LÓGICA DE LA PÁGINA 1: INDEX / LOGIN / TABLA
 // ==========================================
-// Actualización en js/scripts.js
 function inicializarPaginaInicio() {
     cargarTablaPosiciones();
 
@@ -64,7 +63,7 @@ function inicializarPaginaInicio() {
     // Listener para el botón de Registro (enviar datos a Google Sheets)
     document.getElementById("btn-registrar").addEventListener("click", registrarNuevoComandante);
 
-    // NUEVO: Alternar entre paneles visuales
+    // Alternar entre paneles visuales
     document.getElementById("btn-mostrar-registro").addEventListener("click", () => {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("register-container").style.display = "block";
@@ -74,11 +73,7 @@ function inicializarPaginaInicio() {
         document.getElementById("register-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
     });
-}
-
-    // Listener para el botón de Registro manual secundario
-    document.getElementById("btn-registrar").addEventListener("click", registrarNuevoComandante);
-}
+} // <--- Esta llave cierra correctamente la función inicializarPaginaInicio
 
 // Callback cuando Google valida la identidad del usuario
 async function handleGoogleLoginResponse(response) {
