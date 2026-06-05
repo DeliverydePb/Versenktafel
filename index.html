@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Base de Datos de Submarinos</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #1a1a1a; color: #fff; }
+        .login-container { text-align: center; background: #2a2a2a; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .hidden { display: none; }
+        input, button { padding: 10px; margin-top: 10px; width: 80%; border-radius: 4px; border: none; }
+        button { background-color: #00764b; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #009c63; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Acceso al Sistema de Patrullas</h2>
+        <p>Identifíquese con su cuenta de Google para continuar.</p>
+        
+        <div id="buttonDiv"></div>
+
+        <div id="registerForm" class="hidden">
+            <h3>Registro de Nuevo Oficial</h3>
+            <label for="commanderName">Nombre de Comandante:</label>
+            <input type="text" id="commanderName" placeholder="Ej: U-96 Lehmann">
+            <button onclick="registrarComandante()">Dar de Alta</button>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+</body>
+</html>
