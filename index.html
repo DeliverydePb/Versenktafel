@@ -2,65 +2,81 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Tonelaje - Flota Multijugador</title>
+    <title>Tonnage Tracker - Login</title>
+    <script src="config.js"></script>
+    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; }
+        .login-card { background: #2a2a2a; padding: 2rem; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #user-info { display: none; }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <h1>Control de Tonelaje Hundido</h1>
+
+    <div class="login-card">
+        <h1>U-Boat Tonnage Tracker</h1>
         
-        <!-- Contenedor de Login -->
-        <div id="login-section">
-            <p>Inicia sesión para registrar tus hundimientos:</p>
-            <div id="buttonDiv"></div>
+        <div id="google-btn-container">
+            <div id="g_id_onload"></div>
+            <div class="g_id_signin" data-type="standard"></div>
         </div>
 
-        <!-- Panel de Usuario (Oculto al inicio) -->
-        <div id="user-panel" style="display: none;">
-            <h2 id="welcome-msg"></h2>
-            <button onclick="handleLogout()">Cerrar Sesión</button>
-            <hr>
-            <p>Estado: Conectado a la base de datos de la Flota.</p>
+        <div id="user-info">
+            <h2 id="welcome"></h2>
+            <p>Accediendo al registro de tonelaje...</p>
+            <button onclick="logout()">Cerrar Sesión</button>
         </div>
     </div>
 
     <script>
-        function handleCredentialResponse(response) {
-            // Decodificamos el JWT para obtener info del usuario
-            const responsePayload = parseJwt(response.credential);
+        // Inicialización dinámica usando el archivo config.js
+        function initGoogleAuth() {
+            const tokenContainer = document.getElementById('g_id_onload');
             
-            console.log("ID: " + responsePayload.sub);
-            console.log('Nombre: ' + responsePayload.name);
-            
-            document.getElementById("login-section").style.display = "none";
-            document.getElementById("user-panel").style.display = "block";
-            document.getElementById("welcome-msg").innerText = "Bienvenido, Capitán " + responsePayload.name;
-
-            // Aquí guardaremos en LocalStorage para persistencia local
-            localStorage.setItem("user_token", response.credential);
+            // Inyectamos los atributos desde las constantes separadas
+            tokenContainer.setAttribute('data-client_id', CONFIG.GOOGLE_CLIENT_ID);
+            tokenContainer.setAttribute('data-callback', 'handleCredentialResponse');
+            tokenContainer.setAttribute('data-auto_prompt', 'false');
         }
 
-        function parseJwt (token) {
+        function handleCredentialResponse(response) {
+            const responsePayload = parseJwt(response.credential);
+            
+            // Persistencia de la sesión usando LocalStorage
+            localStorage.setItem('user_logged', JSON.stringify(responsePayload));
+            
+            showUserUI(responsePayload);
+        }
+
+        function parseJwt(token) {
             var base64Url = token.split('.')[1];
             var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             return JSON.parse(window.atob(base64));
         }
 
-        window.onload = function () {
-            google.accounts.id.initialize({
-                client_id: "TU_CLIENT_ID_AQUI.apps.googleusercontent.com",
-                callback: handleCredentialResponse
-            });
-            google.accounts.id.renderButton(
-                document.getElementById("buttonDiv"),
-                { theme: "outline", size: "large" }
-            );
-        };
+        function showUserUI(user) {
+            document.getElementById('google-btn-container').classList.add('hidden');
+            const infoDiv = document.getElementById('user-info');
+            infoDiv.style.display = 'block';
+            document.getElementById('welcome').innerText = "Bienvenido, " + user.name;
+        }
 
-        function handleLogout() {
-            localStorage.removeItem("user_token");
+        function logout() {
+            localStorage.removeItem('user_logged');
             location.reload();
+        }
+
+        // Control de flujo al cargar la página
+        window.onload = function() {
+            initGoogleAuth();
+            
+            const savedUser = localStorage.getItem('user_logged');
+            if (savedUser) {
+                showUserUI(JSON.parse(savedUser));
+            }
         }
     </script>
 </body>
