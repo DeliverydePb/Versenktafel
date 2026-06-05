@@ -45,10 +45,11 @@ function verificarSesion() {
 // ==========================================
 // 2. LÓGICA DE LA PÁGINA 1: INDEX / LOGIN / TABLA
 // ==========================================
+// Actualización en js/scripts.js
 function inicializarPaginaInicio() {
     cargarTablaPosiciones();
 
-    // Inicializar Google Identity Services de forma explícita
+    // Inicializar Google Identity Services
     if (typeof google !== 'undefined') {
         google.accounts.id.initialize({
             client_id: CONFIG.GOOGLE_CLIENT_ID,
@@ -59,6 +60,21 @@ function inicializarPaginaInicio() {
             { theme: "dark", size: "large", text: "signin_with" }
         );
     }
+
+    // Listener para el botón de Registro (enviar datos a Google Sheets)
+    document.getElementById("btn-registrar").addEventListener("click", registrarNuevoComandante);
+
+    // NUEVO: Alternar entre paneles visuales
+    document.getElementById("btn-mostrar-registro").addEventListener("click", () => {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("register-container").style.display = "block";
+    });
+
+    document.getElementById("btn-cancelar-registro").addEventListener("click", () => {
+        document.getElementById("register-container").style.display = "none";
+        document.getElementById("login-container").style.display = "block";
+    });
+}
 
     // Listener para el botón de Registro manual secundario
     document.getElementById("btn-registrar").addEventListener("click", registrarNuevoComandante);
