@@ -48,6 +48,17 @@ async function verificarUsuario(email) {
             localStorage.setItem("gameName", data.gameName);
             localStorage.setItem("userEmail", email);
             
+            // Registrar el último acceso de forma asíncrona
+            fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+                "action": "updateLastAccess",
+                "email": email
+            })
+        });
+            
             document.getElementById("status-message").innerText = `¡Bienvenido de vuelta, Comandante ${data.gameName}!`;
             
             // Redireccionar a la página 2 (Lobby / Partidas) tras 1.5 segundos
