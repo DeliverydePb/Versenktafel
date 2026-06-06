@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24 Flotilla - Gestión de Patrullas</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .hidden { display: none; }
+        .panel { background: #e9ecef; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        select, input, button { padding: 10px; margin: 5px 0; font-size: 16px; }
+        button { background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button.btn-danger { background-color: #dc3545; }
+        button.btn-secondary { background-color: #6c757d; }
+        button:hover { opacity: 0.9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #343a40; color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>Sala de Operaciones</h2>
+            <div>
+                <span id="player-display" style="font-weight: bold;">Capitán: ---</span>
+                <button id="btn-logout" class="btn-secondary" style="padding: 5px 10px; margin-left: 15px;">Salir</button>
+            </div>
+        </div>
+
+        <p id="loading-message">Sincronizando con el cuartel general...</p>
+
+        <div id="panel-libre" class="hidden">
+            <div class="panel">
+                <h3>⚓ Iniciar Nueva Patrulla de Combate</h3>
+                <label for="select-sub-crear">Selecciona tu Submarino:</label>
+                <select id="select-sub-crear">
+                    <option value="U-96">U-96</option>
+                    <option value="U-552">U-552</option>
+                    <option value="U-564">U-564</option>
+                    <option value="U-307">U-307</option>
+                </select>
+                <br>
+                <button id="btn-crear-patrulla">Zarpar e Iniciar Patrulla</button>
+            </div>
+
+            <div class="panel">
+                <h3>Buscando Manada de Lobos (Patrullas Activas)</h3>
+                <label for="select-sub-unirse">Selecciona tu Submarino antes de unirte:</label>
+                <select id="select-sub-unirse">
+                    <option value="U-96">U-96</option>
+                    <option value="U-552">U-552</option>
+                    <option value="U-564">U-564</option>
+                    <option value="U-307">U-307</option>
+                </select>
+                
+                <table id="tabla-patrullas-activas">
+                    <thead>
+                        <tr>
+                            <th>Comandante Host</th>
+                            <th>Submarino</th>
+                            <th>Tripulación</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-patrullas">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="panel-host" class="hidden" class="panel">
+            <div class="panel" style="background-color: #d4edda; border-left: 5px solid #28a745;">
+                <h3>Status: Eres el Líder de la Patrulla</h3>
+                <p id="info-patrulla-host">Esperando cazadores...</p>
+                
+                <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
+                    <h4>Cerrar Misión y Registrar Resultados</h4>
+                    <input type="number" id="tonelaje-resultado" placeholder="Tonelaje Hundido Total (ej. 45000)" min="0">
+                    <button id="btn-terminar-patrulla">Terminar Patrulla e Informar</button>
+                    <p style="margin: 5px 0;"><small>O si ocurrió un problema, puedes abortar:</small></p>
+                    <button id="btn-cancelar-patrulla" class="btn-danger">Cancelar Patrulla</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-invitado" class="hidden">
+            <div class="panel" style="background-color: #fff3cd; border-left: 5px solid #ffc107;">
+                <h3>Status: En Navegación (Invitado)</h3>
+                <p id="info-patrulla-invitado">Te has unido a la patrulla de ...</p>
+                <p><strong>⚠️ Órdenes de Flotilla:</strong> Estás en silencio de radio. Debes esperar a que el Líder de la patrulla finalice la misión o la cancele para poder reportar tus estadísticas o iniciar una nueva.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="config.js"></script>
+    <script src="patrullas_scripts.js"></script>
+</body>
+</html>
