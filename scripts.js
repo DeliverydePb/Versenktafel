@@ -61,9 +61,9 @@ async function verificarUsuario(email) {
             
             document.getElementById("status-message").innerText = `¡Bienvenido de vuelta, Comandante ${data.gameName}!`;
             
-            // Redireccionar a la página 2 (Lobby / Partidas) tras 1.5 segundos
+            // Redireccionar a la página 2 (Patrullas) tras 1.5 segundos
             setTimeout(() => {
-                window.location.href = "lobby.html";
+                window.location.href = "patrullas.html";
             }, 1500);
         } else {
             // Si no existe, mostramos el formulario para ingresar el Nombre de Juego
@@ -112,7 +112,7 @@ document.getElementById("btn-register")?.addEventListener("click", async () => {
             
             document.getElementById("status-message").innerText = `¡Registro Exitoso! Bienvenido ${gameNameInput}.`;
             setTimeout(() => {
-                window.location.href = "lobby.html";
+                window.location.href = "patrullas.html";
             }, 1500);
         } else {
             alert("Error al registrar: " + data.message);
