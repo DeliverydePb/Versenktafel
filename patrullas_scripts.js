@@ -9,7 +9,7 @@ if (!gameName || !userEmail) {
 document.getElementById("player-display").innerText = `Capitán: ${gameName}`;
 
 // Al cargar la página, buscamos el estado de las patrullas
-window.onload = function() {
+window.onload = function () {
     cargarEstadoPatrullas();
 };
 
@@ -18,7 +18,7 @@ async function cargarEstadoPatrullas() {
     try {
         const response = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=getPatrullasStatus&email=${encodeURIComponent(userEmail)}`);
         const data = await response.json();
-        
+
         // Ocultar todos los páneles primero
         document.getElementById("panel-libre").classList.add("hidden");
         document.getElementById("panel-host").classList.add("hidden");
@@ -33,7 +33,7 @@ async function cargarEstadoPatrullas() {
             `;
             // Guardamos el ID de la patrulla activa del host
             localStorage.setItem("activePatrullaId", data.activePatrulla.id);
-        } 
+        }
         else if (data.userState === "INVITADO") {
             document.getElementById("panel-invitado").classList.remove("hidden");
             document.getElementById("info-patrulla-invitado").innerHTML = `
@@ -41,7 +41,7 @@ async function cargarEstadoPatrullas() {
                 <strong>Su submarino:</strong> ${data.activePatrulla.creadorSub} | <strong>Tu submarino:</strong> ${data.mySub}<br>
                 <strong>Fecha de zarpe:</strong> ${data.activePatrulla.fechaInicio}
             `;
-        } 
+        }
         else {
             // Usuario LIBRE: Renderizar la lista de patrullas disponibles para unirse
             document.getElementById("panel-libre").classList.remove("hidden");
@@ -130,20 +130,65 @@ async function unirseAPatrulla(patrullaId) {
 // Eventos del Host: Terminar o Cancelar
 document.getElementById("btn-terminar-patrulla").addEventListener("click", () => finalizarMision("TERMINADA"));
 document.getElementById("btn-cancelar-patrulla").addEventListener("click", () => {
-    if(confirm("¿Seguro que deseas cancelar y anular esta patrulla?")) {
+    if (confirm("¿Seguro que deseas cancelar y anular esta patrulla?")) {
         finalizarMision("CANCELADA");
     }
 });
 
 async function finalizarMision(nuevoEstado) {
-    const tonelaje = document.getElementById("tonelaje-resultado").value || 0;
     const patrullaId = localStorage.getItem("activePatrullaId");
 
-    if (nuevoEstado === "TERMINADA" && tonelaje <= 0) {
-        alert("Por favor, ingresa el tonelaje hundido legítimo de la misión.");
+    if (nuevoEstado === "CANCELADA") {
+        if (confirm("¿Seguro que deseas cancelar y anular esta patrulla?")) {
+            enviarCierrePatrulla(patrullaId, "CANCELADA", {});
+        }
         return;
     }
 
+    // Si es TERMINADA, procesamos el reporte de texto
+    const textData = document.getElementById("reporte-raw").value.trim();
+    if (!textData) {
+        alert("Por favor, pega el reporte de misión para poder finalizar.");
+        return;
+    }
+
+    // --- LÓGICA DE PARSEO DE DATOS ---
+    // Separamos el bloque por submarinos usando expresiones regulares
+    const subBlocks = textData.split(/(?=U-\d+)/);
+    const resultadosPorSubmarino = {};
+
+    subBlocks.forEach(block => {
+        // Buscamos el nombre del submarino (ej: U-564 o U-307)
+        const subMatch = block.match(/(U-\d+)/);
+        if (subMatch) {
+            const subName = subMatch[1];
+
+            // Extraemos si sobrevivió o fue hundido ("is alive" o "was sunk")
+            const statusMatch = block.match(/U-\d+\s+is\s+(alive|was\s+sunk|dead)/i);
+            const estaVivo = statusMatch ? (statusMatch[1].toLowerCase() === "alive") : true;
+
+            // Extraemos el tonelaje hundido numérico
+            const tonnageMatch = block.match(/Tonnage\s+Sunk:\s*(\d+)/i);
+            const tonelaje = tonnageMatch ? parseInt(tonnageMatch[1], 10) : 0;
+
+            resultadosPorSubmarino[subName] = {
+                status: estaVivo ? "TERMINADA" : "HUNDIDO",
+                tonelaje: tonelaje
+            };
+        }
+    });
+
+    if (Object.keys(resultadosPorSubmarino).length === 0) {
+        alert("No se pudo reconocer ningún formato válido de submarino (U-96, U-552...) en el texto pegado.");
+        return;
+    }
+
+    // Enviamos los datos procesados
+    enviarCierrePatrulla(patrullaId, "TERMINADA", resultadosPorSubmarino);
+}
+
+// Función auxiliar para despachar los datos al servidor
+async function enviarCierrePatrulla(patrullaId, estadoGlobal, datosSubmarinos) {
     mostrarLoading(true);
     try {
         await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
@@ -153,14 +198,16 @@ async function finalizarMision(nuevoEstado) {
             body: new URLSearchParams({
                 "action": "finalizarPatrulla",
                 "patrullaId": patrullaId,
-                "estado": nuevoEstado,
-                "tonelaje": tonelaje
+                "estadoGlobal": estadoGlobal, // TERMINADA o CANCELADA
+                "datosSubmarinos": JSON.stringify(datosSubmarinos) // Enviamos el JSON estructurado
             })
         });
         localStorage.removeItem("activePatrullaId");
         cargarEstadoPatrullas();
     } catch (e) {
         alert("Error al procesar el fin de la patrulla.");
+    } finally {
+        mostrarLoading(false);
     }
 }
 
