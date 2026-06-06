@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flota - Login y Registro</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f4f4f9; }
+        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; }
+        .hidden { display: none; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Registro de Tonelaje</h2>
+        <p id="status-message">Inicia sesión con tu cuenta de Google para comenzar.</p>
+
+        <div id="google-login-container">
+            <div id="buttonDiv"></div>
+        </div>
+
+        <div id="register-form" class="hidden">
+            <h3>¡Bienvenido/a!</h3>
+            <p>No encontramos tu correo registrado. Por favor, elige tu nombre de capitán.</p>
+            <input type="text" id="game-name" placeholder="Nombre en el Juego (ej. Capt_Miller)" required>
+            <button id="btn-register">Completar Registro</button>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>
