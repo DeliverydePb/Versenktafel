@@ -105,6 +105,31 @@
         <p id="loading-message">Sincronizando con el cuartel general...</p>
 
         <div id="panel-libre" class="hidden">
+
+            <div class="panel">
+                <h3>Buscando Manada de Lobos (Patrullas Activas)</h3>
+                <label for="select-sub-unirse">Selecciona tu Submarino antes de unirte:</label>
+                <select id="select-sub-unirse">
+                    <option value="U-96">U-96</option>
+                    <option value="U-552">U-552</option>
+                    <option value="U-564">U-564</option>
+                    <option value="U-307">U-307</option>
+                </select>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Comandante Host</th>
+                            <th>Submarino</th>
+                            <th>Tripulación</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-patrullas">
+                    </tbody>
+                </table>
+            </div>
+
             <div class="panel">
                 <h3>⚓ Iniciar Nueva Patrulla de Combate</h3>
                 <label for="select-sub-crear">Selecciona tu Submarino:</label>
@@ -118,29 +143,6 @@
                 <button id="btn-crear-patrulla">Zarpar e Iniciar Patrulla</button>
             </div>
 
-            <div class="panel">
-                <h3>Buscando Manada de Lobos (Patrullas Activas)</h3>
-                <label for="select-sub-unirse">Selecciona tu Submarino antes de unirte:</label>
-                <select id="select-sub-unirse">
-                    <option value="U-96">U-96</option>
-                    <option value="U-552">U-552</option>
-                    <option value="U-564">U-564</option>
-                    <option value="U-307">U-307</option>
-                </select>
-
-                <table id="tabla-patrullas-activas">
-                    <thead>
-                        <tr>
-                            <th>Comandante Host</th>
-                            <th>Submarino</th>
-                            <th>Tripulación</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-patrullas">
-                    </tbody>
-                </table>
-            </div>
         </div>
 
         <div id="panel-host" class="hidden">
