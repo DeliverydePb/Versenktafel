@@ -1,121 +1,16 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>24 Flotilla - Gestión de Patrullas</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            padding: 20px;
-            margin: 0;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .panel {
-            background: #e9ecef;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        select,
-        input,
-        button {
-            padding: 10px;
-            margin: 5px 0;
-            font-size: 16px;
-        }
-
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button.btn-danger {
-            background-color: #dc3545;
-        }
-
-        button.btn-secondary {
-            background-color: #6c757d;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #343a40;
-            color: white;
-        }
-    </style>
-</head>
-
-<body>
-
-    <div class="container">
-        <div class="header">
-            <h2>Sala de Operaciones</h2>
-            <div>
-                <span id="player-display" style="font-weight: bold;">Capitán: ---</span>
-                <button id="btn-logout" class="btn-secondary"
-                    style="padding: 5px 10px; margin-left: 15px;">Salir</button>
+<div id="panel-libre" class="hidden">
+            
+            <div id="step-1" class="panel">
+                <h3>⚓ Sala de Embarque - Paso 1 de 3</h3>
+                <p>¿Qué misión deseas emprender hoy, Comandante?</p>
+                <div style="display: flex; gap: 15px; margin-top: 15px;">
+                    <button id="btn-goto-unirse" style="background-color: #007bff; flex: 1;">Buscar Manada de Lobos (Unirse)</button>
+                    <button id="btn-goto-crear" style="background-color: #28a745; flex: 1;">Iniciar Nueva Patrulla (Host)</button>
+                </div>
             </div>
-        </div>
 
-        <p id="loading-message">Sincronizando con el cuartel general...</p>
-
-        <div id="panel-libre" class="hidden">
-
-            <div class="panel">
-                <h3>Buscando Manada de Lobos (Patrullas Activas)</h3>
-                <label for="select-sub-unirse">Selecciona tu Submarino antes de unirte:</label>
-                <select id="select-sub-unirse">
-                    <option value="U-96">U-96</option>
-                    <option value="U-552">U-552</option>
-                    <option value="U-564">U-564</option>
-                    <option value="U-307">U-307</option>
-                </select>
-
+            <div id="step-2-unirse" class="panel hidden">
+                <h3>👥 Seleccionar Patrulla Disponible - Paso 2 de 3</h3>
                 <table>
                     <thead>
                         <tr>
@@ -126,59 +21,36 @@
                         </tr>
                     </thead>
                     <tbody id="lista-patrullas">
-                    </tbody>
+                        </tbody>
                 </table>
+                <br>
+                <button id="btn-back-to-step1-A" class="btn-secondary">⬅️ Volver al Paso 1</button>
             </div>
 
-            <div class="panel">
-                <h3>⚓ Iniciar Nueva Patrulla de Combate</h3>
-                <label for="select-sub-crear">Selecciona tu Submarino:</label>
-                <select id="select-sub-crear">
+            <div id="step-submarino" class="panel hidden">
+                <h3>🚢 Asignación de Nave - Paso 2 de 3</h3>
+                <p id="txt-submarino-contexto"></p>
+                <label for="select-submarino-wizard">Selecciona el Submarino para esta misión:</label>
+                <br>
+                <select id="select-submarino-wizard" style="width: 100%; max-width: 300px; margin: 10px 0;">
                     <option value="U-96">U-96</option>
                     <option value="U-552">U-552</option>
                     <option value="U-564">U-564</option>
                     <option value="U-307">U-307</option>
                 </select>
                 <br>
-                <button id="btn-crear-patrulla">Zarpar e Iniciar Patrulla</button>
+                <button id="btn-submarino-siguiente">Siguiente ➡️</button>
+                <button id="btn-back-to-step2" class="btn-secondary" style="margin-left: 10px;">⬅️ Volver</button>
             </div>
 
-        </div>
-
-        <div id="panel-host" class="hidden">
-            <div class="panel" style="background-color: #d4edda; border-left: 5px solid #28a745;">
-                <h3>Status: Eres el Líder de la Patrulla</h3>
-                <p id="info-patrulla-host">Esperando cazadores...</p>
-
-                <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
-                    <h4>Cerrar Misión y Procesar Reporte</h4>
-                    <p><small>Pega aquí el reporte de misión copiado del juego:</small></p>
-                    <textarea id="reporte-raw" rows="10"
-                        style="width: 100%; box-sizing: border-box; font-family: monospace; padding: 10px;"
-                        placeholder="U-564 is alive... Tonnage Sunk: 0 ..."></textarea>
-
-                    <button id="btn-terminar-patrulla" style="margin-top: 10px;">Procesar Reporte y Terminar
-                        Patrulla</button>
-                    <p style="margin: 15px 0 5px 0;"><small>O si ocurrió un problema, puedes abortar:</small></p>
-                    <button id="btn-cancelar-patrulla" class="btn-danger">Cancelar Patrulla</button>
+            <div id="step-confirmacion" class="panel" style="background-color: #fff3cd; border: 1px solid #ffeba2; display: none;">
+                <h3>📝 Revisión de Órdenes - Paso 3 de 3</h3>
+                <div style="font-size: 18px; margin: 15px 0; padding: 10px; background: white; border-radius: 4px; border-left: 5px solid #ffc107;">
+                    <p id="resumen-mision">Cargando detalles de la orden...</p>
                 </div>
+                <p><small>⚠️ Al confirmar, tu estado cambiará a "En Navegación" y no podrás cambiar de opinión hasta que termine la patrulla.</small></p>
+                <button id="btn-confirmar-zarpe" style="background-color: #28a745; font-weight: bold; padding: 12px 20px;">¡Confirmar y Zarpar!</button>
+                <button id="btn-back-to-submarino" class="btn-secondary" style="margin-left: 10px;">⬅️ Corregir Datos</button>
             </div>
+
         </div>
-
-        <div id="panel-invitado" class="hidden">
-            <div class="panel" style="background-color: #fff3cd; border-left: 5px solid #ffc107;">
-                <h3>Status: En Navegación (Invitado)</h3>
-                <p id="info-patrulla-invitado">Te has unido a la patrulla de ...</p>
-                <p><strong>⚠️ Órdenes de Flotilla:</strong> Estás en silencio de radio. Debes esperar a que el Líder de
-                    la patrulla finalice la misión o la cancele para poder reportar tus estadísticas o iniciar una
-                    nueva.</p>
-            </div>
-        </div>
-
-    </div>
-
-    <script src="config.js"></script>
-    <script src="patrullas_scripts.js"></script>
-</body>
-
-</html>
