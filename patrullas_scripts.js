@@ -110,8 +110,7 @@ async function unirseAPatrulla(patrullaId) {
     mostrarLoading(true);
 
     // 👇 CORTE DE CONTROL: Validamos si seleccionó submarino en el panel de unirse
-    const subElegido = document.getElementById("select-sub-unirse").value;
-    if (!subElegido) {
+    if (!subSeleccionado) {
         alert("⚠️ Primero debes elegir un submarino de la lista antes de unirte a la patrulla.");
         return;
     }
