@@ -75,6 +75,13 @@ document.getElementById("btn-crear-patrulla").addEventListener("click", async ()
     const subSeleccionado = document.getElementById("select-sub-crear").value;
     mostrarLoading(true);
 
+    // 👇 CORTE DE CONTROL: Validamos si seleccionó submarino en el panel de unirse
+    const subElegido = document.getElementById("select-sub-unirse").value;
+    if (!subElegido) {
+        alert("⚠️ Primero debes elegir un submarino de la lista antes de unirte a la patrulla.");
+        return;
+    }
+
     try {
         const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
             method: "POST",
@@ -102,6 +109,13 @@ document.getElementById("btn-crear-patrulla").addEventListener("click", async ()
 async function unirseAPatrulla(patrullaId) {
     const subSeleccionado = document.getElementById("select-sub-unirse").value;
     mostrarLoading(true);
+
+    // 👇 CORTE DE CONTROL: Validamos si seleccionó submarino en el panel de unirse
+    const subElegido = document.getElementById("select-sub-unirse").value;
+    if (!subElegido) {
+        alert("⚠️ Primero debes elegir un submarino de la lista antes de unirte a la patrulla.");
+        return;
+    }
 
     try {
         const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
