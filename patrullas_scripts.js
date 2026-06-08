@@ -75,9 +75,8 @@ document.getElementById("btn-crear-patrulla").addEventListener("click", async ()
     const subSeleccionado = document.getElementById("select-sub-crear").value;
     mostrarLoading(true);
 
-    // 👇 CORTE DE CONTROL: Validamos si seleccionó submarino en el panel de unirse
-    const subElegido = document.getElementById("select-sub-crear").value;
-    if (!subElegido) {
+    // 👇 CORTE DE CONTROL: Validamos si seleccionó submarino en el panel de Crear Patrulla
+    if (!subSeleccionado) {
         alert("⚠️ Primero debes elegir un submarino de la lista antes de unirte a la patrulla.");
         return;
     }
