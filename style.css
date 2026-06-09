@@ -1,0 +1,102 @@
+/* --- Estilos Globales --- */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+/* Para centrar el contenido en el index.html */
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 0;
+}
+
+/* --- Contenedores --- */
+.main-container {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.w-400 { max-width: 400px; }
+.w-800 { max-width: 800px; }
+
+/* --- Cabeceras y Paneles --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.panel {
+    background: #e9ecef;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+/* --- Formularios --- */
+select, input, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    font-size: 16px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+textarea { font-family: monospace; }
+
+/* --- Botones --- */
+button {
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: opacity 0.2s;
+}
+
+button:hover { opacity: 0.9; }
+
+.btn-primary { background-color: #007bff; }   /* Azul - Principal */
+.btn-success { background-color: #28a745; }   /* Verde - Acción positiva */
+.btn-danger  { background-color: #dc3545; }   /* Rojo - Cancelar/Borrar */
+.btn-secondary { background-color: #6c757d; } /* Gris - Salir/Atrás */
+
+/* Ajuste para botones que no deben ocupar todo el ancho */
+button.btn-inline { width: auto; padding: 5px 15px; }
+
+/* --- Tablas --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #343a40;
+    color: white;
+}
+
+/* --- Utilidades --- */
+.hidden { display: none; }
+.text-center { text-align: center; }
