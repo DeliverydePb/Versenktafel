@@ -175,8 +175,8 @@ async function finalizarMision(nuevoEstado) {
         if (subMatch) {
             const subName = subMatch[1];
 
-            // Extraemos si sobrevivió o fue hundido ("is alive" o "was sunk")
-            const statusMatch = block.match(/U-\d+\s+is\s+(alive|was\s+sunk|dead)/i);
+            // Extraemos si sobrevivió o fue destruido ("is alive" o "was destroyed")
+            const statusMatch = block.match(/U-\d+\s+is\s+(alive|was\s+destroyed|dead)/i);
             const estaVivo = statusMatch ? (statusMatch[1].toLowerCase() === "alive") : true;
 
             // Extraemos el tonelaje hundido numérico
