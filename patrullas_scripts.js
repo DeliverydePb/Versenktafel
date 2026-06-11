@@ -219,6 +219,9 @@ async function enviarCierrePatrulla(patrullaId, estadoGlobal, datosSubmarinos) {
     } catch (e) {
         alert("Error al procesar el fin de la patrulla.");
     } finally {
+        // Limpiamos el textarea del reporte para que no quede el texto de la misión anterior
+        const reporteEl = document.getElementById("reporte-raw");
+        if (reporteEl) reporteEl.value = "";
         mostrarLoading(false);
     }
 }
