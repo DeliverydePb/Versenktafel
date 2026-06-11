@@ -219,15 +219,41 @@ function renderizarTabla(data) {
     `).join("");
 }
 
-document.querySelectorAll(".table-controls button").forEach(button => {
-    button.addEventListener("click", () => {
-        const key = button.dataset.sort;
+let currentSortKey = null;
+let sortAscending = false;
+
+document.querySelectorAll("#tonelaje-table th.sortable").forEach(th => {
+    th.addEventListener("click", () => {
+        const key = th.dataset.sort;
+
+        // Si haces clic en el mismo encabezado, alterna el orden
+        if (currentSortKey === key) {
+            sortAscending = !sortAscending;
+        } else {
+            currentSortKey = key;
+            sortAscending = false; // Por defecto descendente
+        }
+
+        // Ordenar
         const sorted = [...tonelajeData].sort((a, b) => {
-            if (typeof a[key] === "number" && typeof b[key] === "number") {
-                return b[key] - a[key];
+            let valA = a[key];
+            let valB = b[key];
+
+            if (typeof valA === "number" && typeof valB === "number") {
+                return sortAscending ? valA - valB : valB - valA;
             }
-            return a[key].localeCompare(b[key]);
+            const cmp = valA.toString().localeCompare(valB.toString());
+            return sortAscending ? cmp : -cmp;
         });
+
+        // Actualizar iconos
+        document.querySelectorAll(".sort-icon").forEach(icon => {
+            icon.textContent = "▼";
+            icon.classList.remove("active");
+        });
+        th.querySelector(".sort-icon").classList.add("active");
+        th.querySelector(".sort-icon").textContent = sortAscending ? "▲" : "▼";
+
         renderizarTabla(sorted);
     });
 });

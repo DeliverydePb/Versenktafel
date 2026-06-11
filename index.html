@@ -76,23 +76,46 @@
         }
 
         .table-wrapper {
-            overflow-x: auto;
+            overflow-x: hidden;
         }
 
         #tonelaje-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 8px;
+            font-size: 14px;
         }
 
         #tonelaje-table th,
         #tonelaje-table td {
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 4px 3px;
+            text-align: center;
         }
 
         #tonelaje-table th {
             background: #f0f0f5;
+            font-weight: bold;
+        }
+
+        #tonelaje-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #tonelaje-table th.sortable:hover {
+            background: #e0e0e5;
+        }
+
+        .sort-icon {
+            margin-left: 5px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        .sort-icon.active {
+            opacity: 1;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -117,22 +140,15 @@
         <div id="tonelaje-section" class="tonelaje-section">
             <h3>Tabla de Tonelaje</h3>
 
-            <div class="table-controls">
-                <span>Ordenar por:</span>
-                <button type="button" data-sort="Comandante">Comandante</button>
-                <button type="button" data-sort="Toneladas">Toneladas</button>
-                <button type="button" data-sort="Patrullas">Patrullas</button>
-                <button type="button" data-sort="TonPatrulla">Ton/Patrulla</button>
-            </div>
-
             <div class="table-wrapper">
                 <table id="tonelaje-table">
                     <thead>
                         <tr>
-                            <th>Comandante</th>
-                            <th>Toneladas</th>
-                            <th>Patrullas</th>
-                            <th>Ton/Patrulla</th>
+                            <th class="sortable" data-sort="Comandante">Comandante <span class="sort-icon">▼</span></th>
+                            <th class="sortable" data-sort="Toneladas">Toneladas <span class="sort-icon">▼</span></th>
+                            <th class="sortable" data-sort="Patrullas">Patrullas <span class="sort-icon">▼</span></th>
+                            <th class="sortable" data-sort="TonPatrulla">Ton/Patrulla <span class="sort-icon">▼</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
