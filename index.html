@@ -1,19 +1,102 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>24 Flotilla - Login y Registro</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f4f4f9; }
-        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; }
-        .hidden { display: none; }
-        input, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
-        button { background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        input,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .tonelaje-section {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .table-controls {
+            margin-bottom: 10px;
+        }
+
+        .table-controls button {
+            margin-right: 6px;
+            padding: 6px 10px;
+            border: 1px solid #007bff;
+            background: #fff;
+            color: #007bff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .table-controls button:hover {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        #tonelaje-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        #tonelaje-table th,
+        #tonelaje-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        #tonelaje-table th {
+            background: #f0f0f5;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="card">
@@ -30,9 +113,41 @@
             <input type="text" id="game-name" placeholder="Nombre en el Juego (ej. Capt_Miller)" required>
             <button id="btn-register">Completar Registro</button>
         </div>
+
+        <div id="tonelaje-section" class="tonelaje-section">
+            <h3>Tabla de Tonelaje</h3>
+
+            <div class="table-controls">
+                <span>Ordenar por:</span>
+                <button type="button" data-sort="Comandante">Comandante</button>
+                <button type="button" data-sort="Toneladas">Toneladas</button>
+                <button type="button" data-sort="Patrullas">Patrullas</button>
+                <button type="button" data-sort="TonPatrulla">Ton/Patrulla</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="tonelaje-table">
+                    <thead>
+                        <tr>
+                            <th>Comandante</th>
+                            <th>Toneladas</th>
+                            <th>Patrullas</th>
+                            <th>Ton/Patrulla</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="4">Cargando datos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <script src="config.js"></script>
     <script src="index_scripts.js"></script>
 </body>
+
 </html>

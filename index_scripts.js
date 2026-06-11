@@ -14,6 +14,8 @@ window.onload = function () {
         document.getElementById("buttonDiv"),
         { theme: "outline", size: "large", type: "standard" }
     );
+
+    cargarTablaTonelaje();
 };
 
 // 2. Callback que recibe la respuesta de Google
@@ -170,4 +172,62 @@ document.getElementById("btn-register")?.addEventListener("click", async () => {
         btnRegister.innerText = "Completar Registro";
         btnRegister.style.backgroundColor = "";
     }
+});
+
+let tonelajeData = [];
+
+async function cargarTablaTonelaje() {
+    const tbody = document.querySelector("#tonelaje-table tbody");
+
+    try {
+        const response = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=getTonelaje`);
+        const result = await response.json();
+
+        if (!result.data || !Array.isArray(result.data)) {
+            tbody.innerHTML = "<tr><td colspan='4'>No se encontraron datos.</td></tr>";
+            return;
+        }
+
+        tonelajeData = result.data.map(row => ({
+            Comandante: row.Comandante || "",
+            Toneladas: parseFloat(row.Toneladas) || 0,
+            Patrullas: parseFloat(row.Patrullas) || 0,
+            TonPatrulla: parseFloat(row["Ton/Patrulla"] || row.TonPatrulla) || 0
+        }));
+
+        renderizarTabla(tonelajeData);
+    } catch (error) {
+        console.error("Error cargando tabla de tonelaje:", error);
+        tbody.innerHTML = "<tr><td colspan='4'>Error al cargar la tabla.</td></tr>";
+    }
+}
+
+function renderizarTabla(data) {
+    const tbody = document.querySelector("#tonelaje-table tbody");
+    if (!data.length) {
+        tbody.innerHTML = "<tr><td colspan='4'>No hay datos disponibles.</td></tr>";
+        return;
+    }
+
+    tbody.innerHTML = data.map(row => `
+        <tr>
+            <td>${row.Comandante}</td>
+            <td>${row.Toneladas}</td>
+            <td>${row.Patrullas}</td>
+            <td>${row.TonPatrulla}</td>
+        </tr>
+    `).join("");
+}
+
+document.querySelectorAll(".table-controls button").forEach(button => {
+    button.addEventListener("click", () => {
+        const key = button.dataset.sort;
+        const sorted = [...tonelajeData].sort((a, b) => {
+            if (typeof a[key] === "number" && typeof b[key] === "number") {
+                return b[key] - a[key];
+            }
+            return a[key].localeCompare(b[key]);
+        });
+        renderizarTabla(sorted);
+    });
 });
