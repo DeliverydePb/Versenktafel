@@ -53,6 +53,7 @@ async function cargarEstadoPatrullas() {
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td>${patrulla.creadorNombre}</td>
+                        <td>${patrulla.tripulacionCount} cap.</td>
                         <td>
                             <select class="select-sub-unirse" data-patrulla-id="${patrulla.id}">
                                 <option value="" selected disabled>--- Selecciona un submarino ---</option>
@@ -62,7 +63,6 @@ async function cargarEstadoPatrullas() {
                                 <option value="U-307">U-307</option>
                             </select>
                         </td>
-                        <td>${patrulla.tripulacionCount} cap.</td>
                         <td><button onclick="unirseAPatrulla('${patrulla.id}', this)">Unirse</button></td>
                     `;
                     tbody.appendChild(tr);
