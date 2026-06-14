@@ -53,9 +53,17 @@ async function cargarEstadoPatrullas() {
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td>${patrulla.creadorNombre}</td>
-                        <td>${patrulla.creadorSub}</td>
+                        <td>
+                            <select class="select-sub-unirse" data-patrulla-id="${patrulla.id}">
+                                <option value="" selected disabled>--- Selecciona un submarino ---</option>
+                                <option value="U-96">U-96</option>
+                                <option value="U-552">U-552</option>
+                                <option value="U-564">U-564</option>
+                                <option value="U-307">U-307</option>
+                            </select>
+                        </td>
                         <td>${patrulla.tripulacionCount} cap.</td>
-                        <td><button onclick="unirseAPatrulla('${patrulla.id}')">Unirse</button></td>
+                        <td><button onclick="unirseAPatrulla('${patrulla.id}', this)">Unirse</button></td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -105,13 +113,15 @@ document.getElementById("btn-crear-patrulla").addEventListener("click", async ()
 });
 
 // Función: Unirse a una Patrulla existente
-async function unirseAPatrulla(patrullaId) {
-    const subSeleccionado = document.getElementById("select-sub-unirse").value;
+async function unirseAPatrulla(patrullaId, button) {
+    const row = button.closest('tr');
+    const subSeleccionado = row.querySelector('.select-sub-unirse')?.value;
     mostrarLoading(true);
 
     // 👇 CORTE DE CONTROL: Validamos si seleccionó submarino en el panel de unirse
     if (!subSeleccionado) {
         alert("⚠️ Primero debes elegir un submarino de la lista antes de unirte a la patrulla.");
+        mostrarLoading(false);
         return;
     }
 
