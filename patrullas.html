@@ -125,15 +125,16 @@
             <div class="panel">
                 <h3>⚓ Iniciar Nueva Patrulla de Combate</h3>
                 <label for="select-sub-crear">Selecciona tu Submarino:</label>
-                <select id="select-sub-crear">
-                    <option value="" selected disabled>--- Selecciona un submarino ---</option>
-                    <option value="U-96">U-96</option>
-                    <option value="U-552">U-552</option>
-                    <option value="U-564">U-564</option>
-                    <option value="U-307">U-307</option>
-                </select>
-                <br>
-                <button id="btn-crear-patrulla">Zarpar e Iniciar Patrulla</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="select-sub-crear" style="flex: 1;">
+                        <option value="" selected disabled>--- Selecciona un submarino ---</option>
+                        <option value="U-96">U-96</option>
+                        <option value="U-552">U-552</option>
+                        <option value="U-564">U-564</option>
+                        <option value="U-307">U-307</option>
+                    </select>
+                    <button id="btn-crear-patrulla">Zarpar e Iniciar Patrulla</button>
+                </div>
             </div>
 
         </div>
