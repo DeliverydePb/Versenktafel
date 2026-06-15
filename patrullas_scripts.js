@@ -245,6 +245,13 @@ async function enviarCierrePatrulla(patrullaId, estadoGlobal, datosSubmarinos) {
 
 function mostrarLoading(show) {
     document.getElementById("loading-message").classList.toggle("hidden", !show);
+    document.body.classList.toggle("loading", show);
+    
+    // Deshabilitar/habilitar todos los botones
+    const buttons = document.querySelectorAll("button");
+    buttons.forEach(btn => {
+        btn.disabled = show;
+    });
 }
 
 document.getElementById("btn-logout").addEventListener("click", () => {
