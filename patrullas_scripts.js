@@ -150,10 +150,10 @@ async function unirseAPatrulla(patrullaId, button) {
 }
 
 // Eventos del Host: Terminar o Cancelar
-document.getElementById("btn-terminar-patrulla").addEventListener("click", () => finalizarMision("TERMINADA"));
-document.getElementById("btn-cancelar-patrulla").addEventListener("click", () => {
+document.getElementById("btn-terminar-patrulla").addEventListener("click", async () => await finalizarMision("TERMINADA"));
+document.getElementById("btn-cancelar-patrulla").addEventListener("click", async () => {
     if (confirm("¿Seguro que deseas cancelar y anular esta patrulla?")) {
-        finalizarMision("CANCELADA");
+        await finalizarMision("CANCELADA");
     }
 });
 
@@ -161,9 +161,7 @@ async function finalizarMision(nuevoEstado) {
     const patrullaId = localStorage.getItem("activePatrullaId");
 
     if (nuevoEstado === "CANCELADA") {
-        if (confirm("¿Seguro que deseas cancelar y anular esta patrulla?")) {
-            enviarCierrePatrulla(patrullaId, "CANCELADA", {});
-        }
+        await enviarCierrePatrulla(patrullaId, "CANCELADA", {});
         return;
     }
 
@@ -206,14 +204,14 @@ async function finalizarMision(nuevoEstado) {
     }
 
     // Enviamos los datos procesados
-    enviarCierrePatrulla(patrullaId, "TERMINADA", resultadosPorSubmarino);
+    await enviarCierrePatrulla(patrullaId, "TERMINADA", resultadosPorSubmarino);
 }
 
 // Función auxiliar para despachar los datos al servidor
 async function enviarCierrePatrulla(patrullaId, estadoGlobal, datosSubmarinos) {
     mostrarLoading(true);
     try {
-        await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+        const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
             method: "POST",
             mode: "cors",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -224,9 +222,18 @@ async function enviarCierrePatrulla(patrullaId, estadoGlobal, datosSubmarinos) {
                 "datosSubmarinos": JSON.stringify(datosSubmarinos) // Enviamos el JSON estructurado
             })
         });
-        localStorage.removeItem("activePatrullaId");
-        cargarEstadoPatrullas();
+        const data = await response.json();
+        
+        if (data.success) {
+            localStorage.removeItem("activePatrullaId");
+            // Pequeño delay para asegurar que el servidor procesó los datos
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await cargarEstadoPatrullas();
+        } else {
+            alert(`Error: ${data.message || 'No se pudo procesar la operación'}`);
+        }
     } catch (e) {
+        console.error("Error al procesar el fin de la patrulla:", e);
         alert("Error al procesar el fin de la patrulla.");
     } finally {
         // Limpiamos el textarea del reporte para que no quede el texto de la misión anterior
