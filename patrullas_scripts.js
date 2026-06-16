@@ -90,6 +90,8 @@ document.getElementById("btn-crear-patrulla").addEventListener("click", async ()
     }
 
     try {
+        await eleccionMision();
+
         const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
             method: "POST",
             mode: "cors",
@@ -108,6 +110,7 @@ document.getElementById("btn-crear-patrulla").addEventListener("click", async ()
             alert(data.message);
         }
     } catch (e) {
+        console.error(e);
         alert("Error al conectar con la flotilla.");
     }
 });
