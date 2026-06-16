@@ -208,7 +208,7 @@ function genConv(fecha, clima) {
 	conv.vel = aleatorioEntre(convVelMin, convVelMax, 1);
 
 	// Ahora definimos el tamaño del convoy
-	let mercantesCant = aleatorioEntre(1, 27, 0);
+	let mercantesCant = aleatorioEntre(4, 60, 0);
 
 	let barcos = ["HF4", "HF5", "HF6", "HF7", "HF8", "HF9", "HF10", "HF11", "HF12", "HF13", "HF14", "HF15", "HF16", "HF17", "HF18", "HF19", "HF24", "HF25", "HF26", "HF27", "HF28", "HF29", "HF30", "HF41", "HF42", "HF43", "HF44", "HF45", "HF46", "HT1", "HT2", "HT3", "HT4", "HT5", "HT6", "HT7", "HT8", "HT9", "HT10", "HT11", "HT12", "HT13", "HT14", "HT15", "HT16", "HT17", "HT18", "HT19", "HT20", "HT21", "HT22", "HT23", "HT24", "HT25", "HT26", "HT27", "HT28", "HT29", "HT30", "HT31", "HT32", "HT33", "HT34", "HT35", "LM1", "LM19", "LM20", "LM21", "LM22", "LM23", "LM24", "LM25", "LM26", "LM27", "LM28", "LM29", "LM30", "LM31", "LM32", "LM33", "LM33", "LM34", "LM35", "LM36", "LM37", "MT1", "MT2", "MT3", "MT4", "MT5", "MT6", "MT7", "MT8", "MT9", "MT10", "MT11", "MT12", "MT13", "MT14", "MT15", "MT16", "MT17", "MT18", "MT19", "MT20", "MT21", "MT22", "MT23", "MT24", "MT25", "MT26", "MT27", "MT28", "MT29", "MT30", "MT31", "MT32", "MT33", "MT34", "MT35", "PL1", "PL2", "PL3", "PL4", "PL5", "HF1", "HF2", "HF3", "HF31", "HF32", "HF33", "HF34", "HF35", "HF36", "HF37", "HF38", "HF39", "HF40", "LM2", "LM3", "LM4", "LM5", "LM6", "LM7", "LM8", "LM9", "LM10", "LM11", "LM12", "LM13", "LM14", "LM15", "LM16", "LM17", "LM18", "RT1", "RT2", "RT3", "RT4", "RT5", "RT6", "RT7", "RT8", "RT9", "RT10"];
 
@@ -301,8 +301,8 @@ function ordenes() {
 			"content": "La Luftwaffe informa trafico mercante en la zona.",
 			"Trigger": 0,
 			"sendTime": aleatorioEntre(300, 600, 0),
-		"target": ""
+			"target": ""
 		}
 	];
-return ordenes;
+	return ordenes;
 }
