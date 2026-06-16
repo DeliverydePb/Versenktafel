@@ -1,8 +1,8 @@
-function misionAleatoria() {
+async function misionAleatoria() {
 
 	let fecha = fechaAleatoria();
 	let oceano = establecerOceano();
-	let clima = consultaClima(fecha, oceano);
+	let clima = await consultaClima(fecha, oceano);
 	let conv = genConv(fecha, clima);
 	let sub = submarinos();
 	let textoMision = texto(fecha, oceano, clima);
