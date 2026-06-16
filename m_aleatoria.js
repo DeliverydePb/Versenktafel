@@ -119,6 +119,9 @@ async function consultaClima(fecha, oceano) {
 	let clima = {
 		vientoVelocidad: "",
 		vientoDireccion: "",
+		temperatura: "",
+		puntoRocio: "",
+		precipitacion: "",
 		niebla: "0.0",
 		amanecer: "",
 		atardecer: ""
@@ -156,9 +159,9 @@ async function consultaClima(fecha, oceano) {
 	// Calulamos la temperatura de punto de rocío para determinar si hay niebla. Si el punto de rocío es igual o mayor a la temperatura, hay niebla.
 	// Si la diferencia entre la temperatura y el punto de rocío es menor o igual a este valor, consideramos que hay niebla.
 	// Si hay presipitacion, esto también contribuye a la formación de niebla, por lo que se toma el máximo entre la contribución de la temperatura/punto de rocío y la precipitación.
-	let temperatura = datosClimaticos.hourly.temperature_2m[indiceHora];
-	let puntoRocio = datosClimaticos.hourly.dew_point_2m[indiceHora];
-	let precipitacion = datosClimaticos.hourly.precipitation[indiceHora];
+	clima.temperatura = datosClimaticos.hourly.temperature_2m[indiceHora];
+	clima.puntoRocio = datosClimaticos.hourly.dew_point_2m[indiceHora];
+	clima.precipitacion = datosClimaticos.hourly.precipitation[indiceHora];
 
 	let limiteNiebla = 3;
 
@@ -166,19 +169,19 @@ async function consultaClima(fecha, oceano) {
 	// Además, si hay precipitación, esto también contribuye a la formación de niebla, por lo que se toma el máximo entre la contribución de
 	// la temperatura/punto de rocío y la precipitación.
 
-	if (limiteNiebla <= temperatura - puntoRocio) {
-		clima.niebla = Math.max(Math.min(precipitacion / 100, 1.0), 0.0);
+	if (limiteNiebla <= clima.temperatura - clima.puntoRocio) {
+		clima.niebla = Math.max(Math.min(clima.precipitacion / 100, 1.0), 0.0);
 	} else {
-		clima.niebla = Math.max((temperatura - puntoRocio) / limiteNiebla, Math.max(Math.min(precipitacion / 100, 1.0), 0.0));
+		clima.niebla = Math.max((clima.temperatura - clima.puntoRocio) / limiteNiebla, Math.max(Math.min(clima.precipitacion / 100, 1.0), 0.0));
 	}
 
 	clima.niebla = Math.round(clima.niebla * 10) / 10; // Redondeamos a un decimal para que sea más legible
 
 	console.log("Viento Velocidad", clima.vientoVelocidad);
 	console.log("Viento Dirección", clima.vientoDireccion);
-	console.log("Temperatura", temperatura);
-	console.log("Punto de Rocío", puntoRocio);
-	console.log("Precipitación", precipitacion);
+	console.log("Temperatura", clima.amanecer + " " + clima.temperatura);
+	console.log("Punto de Rocío", clima.puntoRocio);
+	console.log("Precipitación", clima.precipitacion);
 	console.log("Niebla", clima.niebla);
 	console.log("Amanecer", clima.amanecer);
 	console.log("Atardecer", clima.atardecer);
