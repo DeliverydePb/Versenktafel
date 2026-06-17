@@ -1,0 +1,170 @@
+async function misionHX65() {
+
+	let fecha = {
+		diaNumero: 358,
+		anio: 1940,
+		mes: 8,
+		mesNombre: "Agosto",
+		dia: 24,
+		hora: 12,
+		minuto: 0
+	}
+
+	let oceano = {
+		numero: 0,
+		nombre: "Mar del Norte",
+		lat: 56.45,
+		lon: -3.10
+	}
+
+	let clima = await consultaClima(fecha, oceano);
+	let conv = convHX65(fecha, clima);
+	let sub = submarinosHX65();
+	let textoMision = textoGenerico(fecha, oceano, clima);
+	let ordenesMision = ordenesHX65();
+
+	return {
+		fecha: fecha,
+		oceano: oceano,
+		clima: clima,
+		conv: conv,
+		sub: sub,
+		textoMision: textoMision,
+		ordenesMision: ordenesMision
+	};
+}
+
+function convHX65(clima) {
+
+	let conv = {
+		curso: "",
+		vel: "",
+		mercantes: "",
+		destro: "",
+		corvet: "",
+		sloop: "",
+		dist: "",
+		cambRmb: "",
+		sonar: ""
+	}
+
+	//El curso del convoy se define aleatoriamente.
+	conv.curso = aleatorioEntre(45, 135, 0);
+
+	//La velocidad del convoy.
+	let convVelMin = 5; convVelMax = 15;
+	conv.vel = aleatorioEntre(convVelMin, convVelMax, 1);
+
+	// Ahora definimos el convoy
+
+	let cargos = ["HF4", "HF5", "HF6", "HF7", "HF8", "HF9", "HF10", "HF11", "HF12", "HF13", "HF14", "HF15", "HF16", "HF17", "HF18", "HF19", "HF24", "HF25", "HF26", "HF27", "HF28", "HF29", "HF30", "HF41", "HF42", "HF43", "HF44", "HF45", "HF46", "LM1", "LM19", "LM20", "LM21", "LM22", "LM23", "LM24", "LM25", "LM26", "LM27", "LM28", "LM29", "LM30", "LM31", "LM32", "LM33", "LM33", "LM34", "LM35", "LM36", "LM37", "HF1", "HF2", "HF3", "HF31", "HF32", "HF33", "HF34", "HF35", "HF36", "HF37", "HF38", "HF39", "HF40", "LM2", "LM3", "LM4", "LM5", "LM6", "LM7", "LM8", "LM9", "LM10", "LM11", "LM12", "LM13", "LM14", "LM15", "LM16", "LM17", "LM18"];
+	let pasageros = ["PL1", "PL2", "PL3", "PL4", "PL5"];
+	let tanqueros = ["HT1", "HT2", "HT3", "HT4", "HT5", "HT6", "HT7", "HT8", "HT9", "HT10", "HT11", "HT12", "HT13", "HT14", "HT15", "HT16", "HT17", "HT18", "HT19", "HT20", "HT21", "HT22", "HT23", "HT24", "HT25", "HT26", "HT27", "HT28", "HT29", "HT30", "HT31", "HT32", "HT33", "HT34", "HT35", "MT1", "MT2", "MT3", "MT4", "MT5", "MT6", "MT7", "MT8", "MT9", "MT10", "MT11", "MT12", "MT13", "MT14", "MT15", "MT16", "MT17", "MT18", "MT19", "MT20", "MT21", "MT22", "MT23", "MT24", "MT25", "MT26", "MT27", "MT28", "MT29", "MT30", "MT31", "MT32", "MT33", "MT34", "MT35"];
+	let remolcadores = ["RT1", "RT2", "RT3", "RT4", "RT5", "RT6", "RT7", "RT8", "RT9", "RT10"];
+
+	conv.mercantes = extraerAleatorios(cargos, 34)
+		.concat(extraerAleatorios(pasageros, 1),
+			extraerAleatorios(tanqueros, 17),
+			extraerAleatorios(remolcadores, 2));
+
+	conv.corvet = 0;
+	conv.sloop = 2;
+	conv.destro = 4;
+
+	// Distancia. Vamos a poner la distancia en funcion de la velocidad, cuanto mas lento mas lejos, con un minimo y un máximo.
+	let distMin = 8000; let distMax = 24000;
+	conv.dist = Math.round(distMax + (conv.vel - convVelMin) * (distMin - distMax) / (convVelMax - convVelMin));
+
+	//Definimos si el convoy cambia de direccion en funcion de la relacion entre de barcos en el conboy y escoltas; y de la niebla.
+	// Si un convoy es escoltado por una proporcion menor de 3 mercantes por escolta es posible que no quiera cambiar de curso con frecuencia, con poca o ninguna escolta serán mas precavidos.
+	// Si hay mas de 0.5 de niebla el convoy no va a querer cambiar de rumbo, ya que esto dificultaría la navegación y el mantenimiento de la formación. En condiciones de niebla, los convoyes tienden a mantener un rumbo constante para evitar confusiones y colisiones dentro de la formación.
+
+	let probPorTamaño = (conv.corvet + conv.destro + conv.sloop) / (0.33 * conv.mercantes.length);
+	let probPorNiebla = clima.niebla;
+	if (0.5 < Math.max(probPorTamaño, probPorNiebla)) { conv.cambRmb = "false"; }
+	else { conv.cambRmb = "true"; }
+
+	//Definimos el estado de los sonares en funcion del viento reinante. Un oleaje fuerte evitaba el uso del ASDIC. Para el juego cualquier viento por encima de 7 impedirá el uso del ASDIC.
+	if (clima.vientoVelocidad < 7) { conv.sonar = "true"; }
+	else { conv.sonar = "false"; }
+
+	return conv;
+}
+
+function submarinosHX65() {
+
+	let sub = {
+		tI: "",
+		tII: "",
+		u96AOB: aleatorioEntre(0, 359, 0),
+		u552AOB: aleatorioEntre(0, 359, 0),
+		u564AOB: aleatorioEntre(0, 359, 0),
+		u307AOB: aleatorioEntre(0, 359, 0)
+	}
+
+	// La carga completa de torpedos del sub es de 14. Se establece el maximo de torpedos entre 4 y 14 de para simular un encuentro en mitad de una patrulla. Primero se establece el total y luego se eligen los tipo 1 aleatoriamente y los tipo 2 seran los suplementarios para llegar al total.
+	let totalTorpedos = aleatorioEntre(4, 14, 0);
+	sub.tI = aleatorioEntre(0, totalTorpedos, 0);
+	sub.tII = totalTorpedos - sub.tI;
+
+	return sub;
+}
+
+function textoHX65(fecha, oceano, clima) {
+
+	let texto = {
+		titulo: "",
+		misionDescripcion: "",
+		workshopDescripcion: "",
+		victoria: "",
+		derrota: "",
+		aborto: ""
+	};
+
+	texto.titulo = "Misión Aleatoria";
+	texto.misionDescripcion = `Orden de Patrulla: ${fecha.dia} de ${fecha.mesNombre} de ${fecha.anio}
+De: Befehlshaber der Unterseeboote
+Asunto: Órdenes de Operación
+Kapitänleutnant:
+
+Su área de patrulla asignada será en el ${oceano.nombre}.
+Objetivo de la Misión:
+Interrupción y destrucción de convoyes aliados y buques mercantes solitarios que transiten por su área. Cada tonelada hundida contribuye directamente a la asfixia de la máquina de guerra enemiga.
+Inteligencia Reciente:
+Nuestra inteligencia indica un aumento en la actividad de convoyes. Se sospecha la mayor presencia de escoltas.
+Tácticas y Prioridades:
+Ataque a Convoyes: La prioridad máxima es la intercepción y ataque a convoyes. Reporte contactos y este alerta a la coordinacion para la formacion de manadas de lobos.
+Buques Solitarios: Los buques solitarios que ofrezcan blancos fáciles deben ser atacados con el cañon de cubierta siempre que las condiciones lo permitan y no ponga en riesgo la seguridad del submarino.
+Meteorología: En las próximas horas se esperan vientos de ${clima.vientoVelocidad} nudos provenientes del ${clima.vientoDireccion} grados. La temperatura sera de ${clima.temperatura} grados con un punto de rocío de ${clima.puntoRocio} grados.
+Amanecer: ${clima.amanecer}
+Atardecer: ${clima.atardecer}
+Confío en su experiencia y determinación, Kapitänleutnant. Que la fortuna lo acompañe. La Patria espera resultados.`;
+
+	texto.workshopDescripcion = "Misión generada aleatoriamente.";
+
+	texto.victoria = `El Convoy HX65 fue un convoy que cruzó el Atlántico Norte desde Halifax a Liverpool.
+La mañana del 24/08/1940 fue avistado y atacado por el U-48. El U-48 solo pudo hundir a un tanquero.
+El ataque hizo que el convoy se divida en dos. Ambas partes fueron atacadas al día siguiente por un total de 5 U-boote.
+En total fueron hundidos 8 de los 51 buques, 3 resultaron dañados. Los aliados perdieron 53756 GRT.
+Solo un submarino resultó dañado.
+197 marineros no volvieron a casa.`;
+
+	texto.derrota = "Las operaciones han concluido.";
+
+	texto.aborto = "Las operaciones han concluido.";
+
+	return texto;
+}
+
+function ordenesHX65() {
+	let ordenes = [
+		{
+			"title": "Del BDU:",
+			"content": "La Luftwaffe informa trafico mercante en la zona.",
+			"Trigger": 0,
+			"sendTime": aleatorioEntre(300, 600, 0),
+			"target": ""
+		}
+	];
+	return ordenes;
+}
