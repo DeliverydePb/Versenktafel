@@ -18,9 +18,9 @@ async function misionHX65() {
 	}
 
 	let clima = await consultaClima(fecha, oceano);
-	let conv = convHX65(fecha, clima);
+	let conv = convHX65(clima);
 	let sub = submarinosHX65();
-	let textoMision = textoGenerico(fecha, oceano, clima);
+	let textoMision = textoHX65(fecha, oceano, clima);
 	let ordenesMision = ordenesHX65();
 
 	return {
