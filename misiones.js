@@ -1,5 +1,5 @@
 ﻿async function eleccionMision() {
-    const listaMisiones = [misionHX65, misionHX65, misionHX65];
+    const listaMisiones = [misionAleatoria, misionHX65];
     const misionElegida = extraerAleatorios(listaMisiones, 1)[0];
     const datosMision = await misionElegida();
 
