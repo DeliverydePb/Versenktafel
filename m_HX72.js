@@ -1,13 +1,13 @@
 async function misionHX72() {
 
 	let fecha = {
-		diaNumero: 386,
-		anio: 1940,
-		mes: 9,
+		diaNumero: "386",
+		anio: "1940",
+		mes: "09",
 		mesNombre: "Septiembre",
-		dia: 21,
-		hora: 17,
-		minuto: 30
+		dia: "21",
+		hora: "17",
+		minuto: "30"
 	}
 
 	let oceano = {

@@ -3,9 +3,9 @@ async function misionHX65() {
 	let fecha = {
 		diaNumero: 358,
 		anio: 1940,
-		mes: 8,
+		mes: "08",
 		mesNombre: "Agosto",
-		dia: 24,
+		dia: "24",
 		hora: 12,
 		minuto: 0
 	}
