@@ -1,13 +1,13 @@
-async function misionHX65() {
+async function misionHX72() {
 
 	let fecha = {
-		diaNumero: 358,
+		diaNumero: 386,
 		anio: 1940,
-		mes: 8,
-		mesNombre: "Agosto",
-		dia: 24,
-		hora: 12,
-		minuto: 0
+		mes: 9,
+		mesNombre: "Septiembre",
+		dia: 21,
+		hora: 17,
+		minuto: 30
 	}
 
 	let oceano = {
@@ -17,11 +17,11 @@ async function misionHX65() {
 		lon: -3.10
 	}
 
-	let clima = await consultaClimaHX65(fecha, oceano);
-	let conv = convHX65(clima);
-	let sub = submarinosHX65();
-	let textoMision = textoHX65(fecha, oceano, clima);
-	let ordenesMision = ordenesHX65();
+	let clima = await consultaClimaHX72(fecha, oceano);
+	let conv = convHX72(clima);
+	let sub = submarinosHX72();
+	let textoMision = textoHX72(fecha, oceano, clima);
+	let ordenesMision = ordenesHX72();
 
 	return {
 		fecha: fecha,
@@ -34,7 +34,7 @@ async function misionHX65() {
 	};
 }
 
-async function consultaClimaHX65(fecha, oceano) {
+async function consultaClimaHX72(fecha, oceano) {
 
 	let clima = {
 		vientoVelocidad: "",
@@ -109,7 +109,7 @@ async function consultaClimaHX65(fecha, oceano) {
 	return clima;
 }
 
-function convHX65(clima) {
+function convHX72(clima) {
 
 	let conv = {
 		curso: "",
@@ -137,13 +137,13 @@ function convHX65(clima) {
 	let tanqueros = ["HT1", "HT2", "HT3", "HT4", "HT5", "HT6", "HT7", "HT8", "HT9", "HT10", "HT11", "HT12", "HT13", "HT14", "HT15", "HT16", "HT17", "HT18", "HT19", "HT20", "HT21", "HT22", "HT23", "HT24", "HT25", "HT26", "HT27", "HT28", "HT29", "HT30", "HT31", "HT32", "HT33", "HT34", "HT35", "MT1", "MT2", "MT3", "MT4", "MT5", "MT6", "MT7", "MT8", "MT9", "MT10", "MT11", "MT12", "MT13", "MT14", "MT15", "MT16", "MT17", "MT18", "MT19", "MT20", "MT21", "MT22", "MT23", "MT24", "MT25", "MT26", "MT27", "MT28", "MT29", "MT30", "MT31", "MT32", "MT33", "MT34", "MT35"];
 	let remolcadores = ["RT1", "RT2", "RT3", "RT4", "RT5", "RT6", "RT7", "RT8", "RT9", "RT10"];
 
-	conv.mercantes = extraerAleatorios(cargos, 34)
+	conv.mercantes = extraerAleatorios(cargos, 37)
 		.concat(extraerAleatorios(pasageros, 1),
-			extraerAleatorios(tanqueros, 17),
+			extraerAleatorios(tanqueros, 6),
 			extraerAleatorios(remolcadores, 2));
 
-	conv.corvet = 0;
-	conv.sloop = 2;
+	conv.corvet = 4;
+	conv.sloop = 1;
 	conv.destro = 4;
 
 	// Distancia. Vamos a poner la distancia en funcion de la velocidad, cuanto mas lento mas lejos, con un minimo y un máximo.
@@ -166,7 +166,7 @@ function convHX65(clima) {
 	return conv;
 }
 
-function submarinosHX65() {
+function submarinosHX72() {
 
 	let sub = {
 		tI: "",
@@ -185,7 +185,7 @@ function submarinosHX65() {
 	return sub;
 }
 
-function textoHX65(fecha, oceano, clima) {
+function textoHX72(fecha, oceano, clima) {
 
 	let texto = {
 		titulo: "",
@@ -218,12 +218,12 @@ Confío en su experiencia y determinación, Kapitänleutnant. Que la fortuna lo 
 
 	texto.workshopDescripcion = "Misión generada aleatoriamente.";
 
-	texto.victoria = `El Convoy HX65 fue un convoy que cruzó el Atlántico Norte desde Halifax a Liverpool.
-La mañana del 24/08/1940 fue avistado y atacado por el U-48. El U-48 solo pudo hundir a un tanquero.
-El ataque hizo que el convoy se divida en dos. Ambas partes fueron atacadas al día siguiente por un total de 5 U-boote.
-En total fueron hundidos 8 de los 51 buques, 3 resultaron dañados. Los aliados perdieron 53756 GRT.
-Solo un submarino resultó dañado.
-197 marineros no volvieron a casa.`;
+	texto.victoria = `El Convoy HX72 fue un convoy que cruzó el Atlántico Norte desde Halifax a Liverpool.
+La media noche entre el 20 y 21 de Septiembre de 1940 fue avistado y atacado en solitario por el U-99.
+Al atardecer del 21, otros siete U-boote se sumaron a la cacería.
+Fueron hundidos 11 de los 43 mercantes, 2 resultaron dañados. Los aliados perdieron 72727 GRT.
+Ningún submarino resultó dañado.
+113 marineros no volvieron a casa.`;
 
 	texto.derrota = "Las operaciones han concluido.";
 
@@ -232,7 +232,7 @@ Solo un submarino resultó dañado.
 	return texto;
 }
 
-function ordenesHX65() {
+function ordenesHX72() {
 	let ordenes = [
 		{
 			"title": "Del BDU:",
