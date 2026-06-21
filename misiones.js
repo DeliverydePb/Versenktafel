@@ -1,5 +1,5 @@
 ﻿async function eleccionMision() {
-    const listaMisiones = [misionAleatoria, misionHX65];
+    const listaMisiones = [misionAleatoria, misionHX65, misionHX72];
     const misionElegida = extraerAleatorios(listaMisiones, 1)[0];
     const datosMision = await misionElegida();
 
@@ -22,9 +22,6 @@
 }
 
 async function escribeMision(texto, ordenes, fecha, oceano, clima, conv, sub) {
-    const objectiveVisibility = (typeof Texto !== 'undefined' && Texto && Texto.objectivoVisibilidad !== undefined)
-        ? Texto.objectivoVisibilidad
-        : 0;
 
     const missionObject = {
         readme: "Mission file for the game Wolfpack. https://store.steampowered.com/app/490920/Wolfpack/, for instructions on how to use this file or develop your own mission, see the wolfpack manual on Steam.",
@@ -37,7 +34,7 @@ async function escribeMision(texto, ordenes, fecha, oceano, clima, conv, sub) {
             victoryMessage: texto.victoria,
             defeatMessage: texto.derrota,
             abortMessage: texto.aborto,
-            objectiveVisibility: objectiveVisibility,
+            objectiveVisibility: texto.objectivoVisibilidad,
             seed: Math.floor(Math.random() * 100000000),
             languages: [23],
             forceManualNavigation: false,
