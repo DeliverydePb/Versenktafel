@@ -53,8 +53,8 @@ async function consultaClimaHX72(fecha, oceano) {
 
 	let apiUrl = "https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=" + oceano.lat +
 		"&longitude=" + oceano.lon +
-		"&start_date=" + (fecha.anio + 80) + "-" + fecha.mes + "-" + fecha.dia +
-		"&end_date=" + (fecha.anio + 80) + "-" + fecha.mes + "-" + fecha.dia +
+		"&start_date=" + (parseInt(fecha.anio) + 80) + "-" + fecha.mes + "-" + fecha.dia +
+		"&end_date=" + (parseInt(fecha.anio) + 80) + "-" + fecha.mes + "-" + fecha.dia +
 		"&daily=sunrise,sunset&hourly=dew_point_2m,wind_speed_10m,wind_direction_10m,temperature_2m,precipitation&timezone=Europe%2FBerlin";
 
 	console.log("URL", apiUrl);
@@ -64,7 +64,7 @@ async function consultaClimaHX72(fecha, oceano) {
 	let datosClimaticos = await response.json();
 
 	// Fabricamos el formato de hora que usa la API: "AÑO-MES-DIAThora:00"
-	let horaEspecifica = `${(fecha.anio + 80)}-${fecha.mes}-${fecha.dia}T${horaFormateada}:00`;
+	let horaEspecifica = `${(parseInt(fecha.anio) + 80)}-${fecha.mes}-${fecha.dia}T${horaFormateada}:00`;
 	let indiceHora = datosClimaticos.hourly.time.indexOf(horaEspecifica);
 
 	// Guardamos los datos DIRECTAMENTE en tu objeto global 'clima'
