@@ -138,6 +138,8 @@ async function consultaClimaAleatoria(fecha, oceano) {
 		"&end_date=" + (fecha.anio + 80) + "-" + fecha.mes + "-" + fecha.dia +
 		"&daily=sunrise,sunset&hourly=dew_point_2m,wind_speed_10m,wind_direction_10m,temperature_2m,precipitation&timezone=Europe%2FBerlin";
 
+	console.log("URL", apiUrl);
+
 	// Usamos el fetch nativo del navegador
 	let response = await fetch(apiUrl);
 	let datosClimaticos = await response.json();
