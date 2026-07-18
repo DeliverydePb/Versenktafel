@@ -149,7 +149,7 @@ function convOG69(clima) {
 	conv.destro = 0;
 
 	// Distancia. Vamos a poner la distancia en funcion de la velocidad, cuanto mas lento mas lejos, con un minimo y un máximo.
-	let distMin = 8000; let distMax = 24000;
+	let distMin = 8000; let distMax = 18000;
 	conv.dist = Math.round(distMax + (conv.vel - convVelMin) * (distMin - distMax) / (convVelMax - convVelMin));
 
 	//Definimos si el convoy cambia de direccion en funcion de la relacion entre de barcos en el conboy y escoltas; y de la niebla.
